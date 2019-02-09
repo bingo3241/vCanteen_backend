@@ -1,0 +1,9 @@
+{
+    "name": "vCanteen_backend",
+    "version": "0.0.1",
+    "description": "backend of vcanteen",
+    "dependencies": {
+        "express": "^4.15.2",
+        "socket.io": "^2.2.0"
+    }
+}
