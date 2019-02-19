@@ -5,9 +5,9 @@ module.exports = {
         var mailgun = require('mailgun-js')({apiKey: API_KEY, domain: DOMAIN});
 
         const data = {
-        from: 'Excited User <me@samples.mailgun.org>',
+        from: 'vCanteen <vcanteen@gmail.com>',
         to: email,
-        subject: 'Hello',
+        subject: 'Hello, Your new password is here!',
         text: 'Your new password: '+password
         };
 
