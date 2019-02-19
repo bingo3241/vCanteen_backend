@@ -6,6 +6,16 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/forget_password', function(req, res) {
+    const passwordModule = require('./random_password_generator');
+    const emailModule = require('./email');
+    let password = passwordModule.generate();
+    console.log('New password: '+password);
+    emailModule.mailto(password, 'bingo6689@gmail.com');
+    res.send('New password: '+password);
+
+})
+
 io.on('connection', function(socket){
     console.log('a user connected :'+socket.id);
 });
