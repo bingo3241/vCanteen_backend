@@ -1,11 +1,11 @@
 module.exports = {
     mailto: function(password, email) {
-        var API_KEY = 'f7b249a2413b80c07dcc5025160ace4a-9ce9335e-1291a245';
-        var DOMAIN = 'sandbox170d9ebcfa4c4ff1abd017d8f7352e94.mailgun.org';
+        var API_KEY = 'aeacd2e09129e2ffef44fb19cdd4da31-9ce9335e-8f70b4ae';
+        var DOMAIN = 'sandbox2d21c1642099472ebd59aa4c8e67858c.mailgun.org';
         var mailgun = require('mailgun-js')({apiKey: API_KEY, domain: DOMAIN});
 
         const data = {
-        from: 'Mailgun Sandbox <postmaster@sandbox170d9ebcfa4c4ff1abd017d8f7352e94.mailgun.org>',
+        from: 'Excited User <me@samples.mailgun.org>',
         to: email,
         subject: 'Hello',
         text: 'Your new password: '+password
