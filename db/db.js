@@ -68,16 +68,11 @@ function query(sql, params = []) {
       if (err) reject(err);
       console.log('Result: ', rows);
       resolve(rows);
+      fixieConnection.dispose();
+      connection.end();
     });
   })
 }
-
-
-
-
-
-
-
 module.exports = {
     query
 }
