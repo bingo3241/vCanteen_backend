@@ -46,7 +46,7 @@ const mysqlServer = {
 
 const dbUser = 'root';
 const dbPassword = 'root';
-const db = 'test-db';
+const db = 'vcanteen-db-v1';
 
 const fixieConnection = new SocksConnection(mysqlServer, {
   user: fixieValues[0],
