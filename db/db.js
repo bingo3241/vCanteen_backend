@@ -55,7 +55,7 @@ const fixieConnection = new SocksConnection(mysqlServer, {
   port: fixieValues[3],
 });
 
-const mysqlConnPool = mysql.createPool({
+const connection = mysql.createConnection({
   user: dbUser,
   password: dbPassword,
   database: db,
@@ -64,14 +64,12 @@ const mysqlConnPool = mysql.createPool({
 
 function query(sql, params = []) {
   return new Promise( (resolve, reject) => {
-    mysqlConnPool.query(sql,params, function(err, rows, fields) {
-      // Connection is automatically released when query resolves
-      if(err) {
-        reject(err);
-      }
-      resolve(rows)
-   })
-  });
+    connection.query(sql, params, function(err, rows, fields) {
+      if (err) reject(err);
+      console.log('Result: ', rows);
+      resolve(rows);
+    });
+  })
 }
 
 
