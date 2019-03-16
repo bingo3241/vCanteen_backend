@@ -62,9 +62,9 @@ const connection = mysql.createConnection({
   stream: fixieConnection
 });
 
-function query(sql, params = []) {
+async function query(sql, params = []) {
   return new Promise( (resolve, reject) => {
-    connection.query(sql, params, function(err, rows, fields) {
+    await connection.query(sql, params, function(err, rows, fields) {
       if (err) reject(err);
       console.log('Result: ', rows);
       resolve(rows);
