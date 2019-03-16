@@ -62,14 +62,13 @@ const connection = mysql.createConnection({
   stream: fixieConnection
 });
 
-async function query(sql, params = []) {
+function query(sql, params = []) {
   return new Promise( (resolve, reject) => {
-    await connection.query(sql, params, function(err, rows, fields) {
+    connection.query(sql, params, function(err, rows, fields) {
       if (err) reject(err);
       console.log('Result: ', rows);
       resolve(rows);
       fixieConnection.dispose();
-      connection.end();
     });
   })
 }
