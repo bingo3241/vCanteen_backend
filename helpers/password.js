@@ -1,6 +1,7 @@
 //Credit: https://stackoverflow.com/users/822354/hajikelist
-module.exports = {
-    generate: function( len ) {
+const sjcl = require('../library/sjcl');
+
+function generate ( len ) {
     var length = (len)?(len):(15);
     var lowercase= "abcdefghijklmnopqrstuvwxyz"; //to upper 
     var numeric = '0123456789';
@@ -20,5 +21,19 @@ module.exports = {
     }
     password=password.split('').sort(function(){return 0.5-Math.random()}).join('');
     return password.substr(0,len);
-    }
 }
+
+function hash (input) {
+    var output = sjcl.hash.sha256.hash(newpassword);
+    return output;
+}
+
+function toUpperCase(input) {
+    return sjcl.codec.hex.fromBits(input).toString().toUpperCase();
+}
+module.exports = {
+    generate,
+    hash,
+    toUpperCase
+}
+
