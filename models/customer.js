@@ -1,6 +1,7 @@
 const db = require('../db/db');
 
 async function getAll() {
+  
     return await db.query('SELECT * FROM Customers');
 }
 
