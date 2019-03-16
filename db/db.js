@@ -71,6 +71,7 @@ function query(sql, params = []) {
       fixieConnection.dispose();
     });
   })
+
 }
 module.exports = {
     query
