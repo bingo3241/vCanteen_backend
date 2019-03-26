@@ -24,13 +24,10 @@ function generate ( len ) {
 }
 
 function hash (input) {
-    var output = sjcl.hash.sha256.hash(newpassword);
-    return output;
+    var output = sjcl.hash.sha256.hash(input);
+    return sjcl.codec.hex.fromBits(output).toString();
 }
 
-function toUpperCase(input) {
-    return sjcl.codec.hex.fromBits(input).toString().toUpperCase();
-}
 module.exports = {
     generate,
     hash,

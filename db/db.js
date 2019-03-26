@@ -66,7 +66,7 @@ function query(sql, params = []) {
   return new Promise( (resolve, reject) => {
     connection.query(sql, params, function(err, rows, fields) {
       if (err) reject(err);
-      console.log('Result: ', rows);
+      console.log('Result: '+rows);
       resolve(rows);
       fixieConnection.dispose();
     });

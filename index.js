@@ -6,7 +6,8 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))
 
-const customerModel = require('./models/customer');
+const customersModel = require('./models/customers');
+const ordersModel = require('./models/orders')
 
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
@@ -32,9 +33,10 @@ app.get('/', function(req, res){
 
 app.put('/v1/user-authentication/customer/password/recover', (req,res) => {
     var email = req.body.email;
-    if(customerModel.isInDatabase(email) == true) {
+    if(customersModel.isInDatabase(email) == true) {
         var newpassword = passwordModule.generate();
         var hash = passwordModule.hash(newpassword);
+        customersModel.updatePassword(email,hash);
         emailModule.mailto(newpassword,email);
         res.json(200, 'OK');
     } else {
@@ -42,12 +44,19 @@ app.put('/v1/user-authentication/customer/password/recover', (req,res) => {
     }
 })
 
-app.get('/customer', async (req,res) => {
-    res.json(await customerModel.getAll());
+app.get('/v1/sales-record/vendor/sales', (req,res) => { //wip
+    var vendorId = req.body.vendorId;
+    res.json(202, ordersModel.getSaleRecord(vendorId))
+    
 })
 
-app.post('/sign_in', function(req, res) {
-    
+app.get('/customer', async (req,res) => {
+    res.json(await customersModel.getAll());
+})
+
+app.post('/hashtest', function(req, res) {
+    var a = req.body.text;
+    res.json(passwordModule.hash(a));
 })
 
 

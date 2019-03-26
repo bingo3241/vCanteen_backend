@@ -20,4 +20,4 @@ app.get('/users',validateUser,(req,res)=>{
       // {name:'bingo',age:20}
     }
   })
-  }
+}
