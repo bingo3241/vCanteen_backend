@@ -7,7 +7,7 @@ async function getAll() {
 
 async function updateOrderStatus(order_status,order_id) {
     try{
-        let result = await db.query('UPDATE orders SET order_status = ? WHERE order_id = ?', [order_status,order_id])
+        let result = await db.query('UPDATE Orders SET order_status = ? WHERE order_id = ?', [order_status,order_id])
         return [null,result]
     } 
     catch(err) {
