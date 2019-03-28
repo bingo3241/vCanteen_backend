@@ -59,8 +59,8 @@ app.put('/v1/user-authentication/customer/password/change' , async (req,res) => 
       }
 })
 
-app.put('/v1/vendor-main/:order_id/status', async (req,res) => {
-    let order_id = req.params.order_id;
+app.put('/v1/vendor-main/orderId/status', async (req,res) => {
+    let order_id = req.body.order_id;
     console.log(order_id);
     var order_status = req.body.order_status;
     console.log(order_status);
@@ -81,7 +81,7 @@ app.put('/v1/menu-management/vendorId/menu/' , async (req,res) => {
     } else {
       res.json(result)
     }
-     
+
 })
 
 app.post('/v1/vendor-main/vendorId/orders' , async(req,res) => {
