@@ -29,7 +29,7 @@ async function changePassword(pwd,customer_id) {
 }
 
 module.exports = {
-    getAll,
-    isInDatabase,
-    changePassword
+getAll,
+isInDatabase,
+changePassword
 }

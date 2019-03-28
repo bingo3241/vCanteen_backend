@@ -75,24 +75,20 @@ app.put('/v1/vendor-main/orderId/status', async (req,res) => {
 })
 app.put('/v1/menu-management/vendorId/menu/' , async (req,res) => {
     let vendor_id = req.body.vendor_id
-    let result = {combinationList: await vendorModel.getCombMenu(vendor_id), alacarteList: await vendorModel.getAlaMenu(vendor_id)}
-    if(result.combinationList == false || result.alacarteList == false) {
-      res.status(404).send()
-    } else {
-      res.json(result)
-    }
-
+    const x = await vendorModel.getCombMenu(vendor_id)
+    const y = await vendorModel.getAlaMenu(vendor_id)
+    const result = {combinationList: await x ,alacarteList: await y }
+    res.json(result)
+    
 })
 
 app.post('/v1/vendor-main/vendorId/orders' , async(req,res) => {
   let vendor_id = req.body.vendor_id
   let result = {orderList : await vendorModel.getOrder(vendor_id)}
-  if(result.orderList == false){
-    res.status(404).send()
-  }else{
-    res.json(result)
-  }
+  res.json(result)  
 })
+
+
 
 app.get('/customer', async (req,res) => {
     res.json(await customerModel.getAll());

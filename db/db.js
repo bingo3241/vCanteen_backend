@@ -77,31 +77,31 @@ module.exports = {
     query
 }
 
-/*var mysql = require("mysql2");
+// var mysql = require("mysql2");
 
-//local db
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "supakit6948",
-    password: "12345678",
-    database: "supakit6948",
-    port: 3306
-})
+// //local db
+// var con = mysql.createConnection({
+//     host: "35.240.206.151",
+//     user: "root",
+//     password: "root",
+//     database: "vcanteen-db-v1",
+//     port: 3306
+// })
 
-con.connect()
+// con.connect()
 
-function query(sql, params = []) {
-    return new Promise( (resolve, reject) => {
-        con.query(sql, params, function(err, result, fields) {
-            if (err) {
-                reject(err)
-            }
-            resolve(result)
-        })
-    })
+// function query(sql, params = []) {
+//     return new Promise( (resolve, reject) => {
+//         con.query(sql, params, function(err, result, fields) {
+//             if (err) {
+//                 reject(err)
+//             }
+//             resolve(result)
+//         })
+//     })
     
-}
+// }
 
-module.exports = {
-    query
-}*/
+// module.exports = {
+//     query
+// }
