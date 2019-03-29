@@ -31,7 +31,7 @@ app.get('/', function(req, res){
 //     //TODO: INSERT HASHED NEW PASSWORD INTO DB
 // })
 
-app.put('/v1/user-authentication/customer/password/recover', (req,res) => {
+app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
     if(customersModel.isInDatabase(email) == true) {
         var newpassword = passwordModule.generate();
@@ -44,17 +44,22 @@ app.put('/v1/user-authentication/customer/password/recover', (req,res) => {
     }
 })
 
-app.get('/v1/sales-record/vendor/sales', (req,res) => { //wip
+app.get('/v1/sales-record/vendor/sales', async (req,res) => { //wip
     var vendorId = req.body.vendorId;
-    res.json(202, ordersModel.getSaleRecord(vendorId))
+    res.json(202, await ordersModel.getSaleRecord(vendorId))
     
+})
+
+app.get('/v1/orders/customers/:customerId', async (req,res) => {
+    var customerId = req.params.customerId;
+    res.status(200).json(await ordersModel.getMenuItems(customerId))
 })
 
 app.get('/customer', async (req,res) => {
     res.json(await customersModel.getAll());
 })
 
-app.post('/hashtest', function(req, res) {
+app.post('/hashtest', async (req, res) => {
     var a = req.body.text;
     res.json(passwordModule.hash(a));
 })

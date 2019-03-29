@@ -30,7 +30,6 @@ function hash (input) {
 
 module.exports = {
     generate,
-    hash,
-    toUpperCase
+    hash
 }
 

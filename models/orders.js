@@ -37,6 +37,24 @@ async function getSaleRecord(vendorId) {
    
 }
 
+async function getMenuItems(customerId) {
+  var inProgress = await db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+                            "FROM Orders, Contains, Food, Vendors "+
+                            "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'DONE' OR Orders.order_status = 'COOKING')", [customerId])
+
+  var history = await db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+                              "FROM Orders, Contains, Food, Vendors "+
+                              "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED')", [customerId])
+
+  var result = new Object();
+  result.progList = inProgress;
+  result.histList = history;
+  console.log(result)
+  
+  return result;
+}
+
 module.exports = {
-  getSaleRecord
+  getSaleRecord,
+  getMenuItems
 }
