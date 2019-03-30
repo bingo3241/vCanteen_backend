@@ -64,6 +64,36 @@ app.post('/hashtest', async (req, res) => {
     res.json(passwordModule.hash(a));
 })
 
+app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
+    if(req.body.account_type == 'FACEBOOK') {
+        var email = req.body.email
+        console.log('email: '+email)
+        if(await customersModel.FacebookAuth(email)) {
+            var result = new Object()
+            result.customer_id = await customersModel.getCustomerID(email)
+            result.token = 'jwt'
+            console.log(result);
+            res.status(200).json(result)
+        } else {
+            res.status(404).json('email not found')
+        }
+    } else if(req.body.account_type == 'NORMAL') {
+        var email = req.body.email
+        var password = req.body.password;
+        if(await customersModel.NormalAuth(email, password)) {
+            var result = new Object()
+            result.customer_id = await customersModel.getCustomerID(email)
+            result.token = 'jwt'
+            console.log(result);
+            res.status(200).json(result)
+        } else {
+            res.status(404).json('email not found')
+        }
+        console.log('email: '+email)
+
+    }
+
+})
 
 
 io.on('connection', function(socket){
