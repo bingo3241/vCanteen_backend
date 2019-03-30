@@ -35,12 +35,14 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
     var email = req.body.email;
     if(customersModel.isInDatabase(email)) {
         var newpassword = passwordModule.generate();
+        console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
-        customersModel.updatePassword(email,hash);
+        console.log('Hash: '+hash)
+        var results = customersModel.updatePassword(email,hash);
         emailModule.mailto(newpassword,email);
-        res.json(200, 'OK');
+        res.status(200).json('New password is sent! '+results);
     } else {
-        res.json(404, 'Email not found');
+        res.status(404).json('Email not found');
     }
 })
 

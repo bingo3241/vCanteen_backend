@@ -19,3 +19,7 @@ function mailto(password, email) {
 
     });
 }
+
+module.exports = {
+    mailto
+}

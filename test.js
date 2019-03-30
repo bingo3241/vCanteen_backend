@@ -1,2 +1,3 @@
-const passwordHelper = require('./helpers/password');
-console.log(passwordHelper.hash("test"));
+const db = require('./db/db')
+
+db.query("UPDATE Customers SET passwd = 'password' WHERE customer_id = 2")

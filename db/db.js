@@ -49,18 +49,25 @@ const dbUser = 'root';
 const dbPassword = 'root';
 const db = 'vcanteen-db-v1';
 
-const fixieConnection = new SocksConnection(mysqlServer, {
-  user: fixieValues[0],
-  pass: fixieValues[1],
-  host: fixieValues[2],
-  port: fixieValues[3],
-});
+// const fixieConnection = new SocksConnection(mysqlServer, {
+//   user: fixieValues[0],
+//   pass: fixieValues[1],
+//   host: fixieValues[2],
+//   port: fixieValues[3],
+// });
 
 var pool = mysql.createPool({
   user: dbUser,
   password: dbPassword,
   database: db,
-  stream: fixieConnection
+  stream: function() {
+    return new SocksConnection(mysqlServer, {
+      user: fixieValues[0],
+      pass: fixieValues[1],
+      host: fixieValues[2],
+      port: fixieValues[3],
+    });
+ }
 });
 
 function query(sql, params = []) {
@@ -73,17 +80,35 @@ function query(sql, params = []) {
       connection.query(sql, params, function(err, results) {
         pool.releaseConnection(connection); // always put connection back in pool after last query
         if(err) { 
-          console.log(err); 
-          callback(true); 
+          console.log(err);  
           reject(err)
         }
         resolve(results)
       });
     });
-  })
-    
+  }) 
+}
+
+function execute(sql, params = []) {
+  return new Promise( (resolve, reject) => {
+    pool.getConnection(function(err, connection) {
+      if(err) { 
+        console.log(err); 
+        reject(err) 
+      }
+      connection.execute(sql, params, function(err, results) {
+        pool.releaseConnection(connection); // always put connection back in pool after last query
+        if(err) { 
+          console.log(err);  
+          reject(err)
+        }
+        resolve(results)
+      });
+    });
+  }) 
 }
 
 module.exports = {
-    query
+    query,
+    execute
 }
