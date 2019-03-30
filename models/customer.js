@@ -18,7 +18,7 @@ async function updatePassword(email, hash) {
 
 }
 
-async function changePassword(pwd,customer_id) {
+async function changePasswords(pwd,customer_id) {
     try {
         let result = await db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [pwd,customer_id])
         return [null, result]
@@ -31,5 +31,5 @@ async function changePassword(pwd,customer_id) {
 module.exports = {
 getAll,
 isInDatabase,
-changePassword
+changePasswords
 }
