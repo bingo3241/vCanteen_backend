@@ -1,8 +1,7 @@
 const db = require('../db/db');
 
 function getAll() {
-  
-    return db.query('SELECT * FROM Customers');
+    return result = db.query('SELECT * FROM Customers');
 }
 
 function get(id) {
