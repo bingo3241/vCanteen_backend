@@ -44,11 +44,11 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
     }
 })
 
-app.get('/v1/sales-record/vendor/sales', async (req,res) => { //wip
-    var vendorId = req.body.vendorId;
-    res.json(202, await ordersModel.getSaleRecord(vendorId))
+// app.get('/v1/sales-record/vendor/sales', async (req,res) => { //wip
+//     var vendorId = req.body.vendorId;
+//     res.json(202, await ordersModel.getSaleRecord(vendorId))
     
-})
+// })
 
 app.get('/v1/orders/customers/:customerId', async (req,res) => {
     var customerId = req.params.customerId;
