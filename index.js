@@ -33,7 +33,7 @@ app.get('/', function(req, res){
 
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
-    if(customersModel.isInDatabase(email) == true) {
+    if(customersModel.isInDatabase(email)) {
         var newpassword = passwordModule.generate();
         var hash = passwordModule.hash(newpassword);
         customersModel.updatePassword(email,hash);
@@ -71,7 +71,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
         if(await customersModel.FacebookAuth(email)) {
             var result = new Object()
             result.customer_id = await customersModel.getCustomerID(email)
-            result.token = 'jwt'
+            result.token = 'wip jwt'
             console.log(result);
             res.status(200).json(result)
         } else {
@@ -83,11 +83,11 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
         if(await customersModel.NormalAuth(email, password)) {
             var result = new Object()
             result.customer_id = await customersModel.getCustomerID(email)
-            result.token = 'jwt'
+            result.token = 'wip jwt'
             console.log(result);
             res.status(200).json(result)
         } else {
-            res.status(404).json('email not found')
+            res.status(404).json("Can't find a user using this combination")
         }
         console.log('email: '+email)
 

@@ -13,7 +13,7 @@ async function getCustomerID(email) {
     return temp[0].customer_id;
 }
 
-async function FacebookAuth(email) {
+async function isInDatabase(email) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Customers WHERE email = ?', [email])
     if( temp[0].Count == 1 ){
         console.log("In database?: true")
@@ -44,7 +44,7 @@ module.exports = {
     getAll,
     get,
     getCustomerID,
-    FacebookAuth,
+    isInDatabase,
     NormalAuth,
     updatePassword
 }

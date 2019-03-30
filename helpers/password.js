@@ -8,7 +8,6 @@ function generate ( len ) {
     var uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     var password = "";
     var character = "";
-    var crunch = true;
     while( password.length<length ) {
         entity1 = Math.ceil(lowercase.length * Math.random()*Math.random());
         entity2 = Math.ceil(numeric.length * Math.random()*Math.random());
