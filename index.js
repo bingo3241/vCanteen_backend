@@ -38,7 +38,7 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
         console.log('Hash: '+hash)
-        var results = customersModel.updatePassword(email,hash);
+        await customersModel.updatePassword(email,hash);
         emailModule.mailto(newpassword,email);
         res.status(200).json('New password is sent! '+results);
     } else {
@@ -70,26 +70,28 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
     if(req.body.account_type == 'FACEBOOK') {
         var email = req.body.email
         console.log('email: '+email)
-        if(await customersModel.FacebookAuth(email)) {
+        if(await customersModel.isInDatabase(email)) {
             var result = new Object()
+            result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
             result.token = 'wip jwt'
             console.log(result);
             res.status(200).json(result)
         } else {
-            res.status(404).json('email not found')
+            res.status(404).json({status: 'error'})
         }
     } else if(req.body.account_type == 'NORMAL') {
         var email = req.body.email
         var password = req.body.password;
         if(await customersModel.NormalAuth(email, password)) {
             var result = new Object()
+            result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
             result.token = 'wip jwt'
             console.log(result);
             res.status(200).json(result)
         } else {
-            res.status(404).json("Can't find a user using this combination")
+            res.status(404).json({status: 'error'})
         }
         console.log('email: '+email)
 

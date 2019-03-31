@@ -89,26 +89,7 @@ function query(sql, params = []) {
   }) 
 }
 
-function execute(sql, params = []) {
-  return new Promise( (resolve, reject) => {
-    pool.getConnection(function(err, connection) {
-      if(err) { 
-        console.log(err); 
-        reject(err) 
-      }
-      connection.execute(sql, params, function(err, results) {
-        pool.releaseConnection(connection); // always put connection back in pool after last query
-        if(err) { 
-          console.log(err);  
-          reject(err)
-        }
-        resolve(results)
-      });
-    });
-  }) 
-}
 
 module.exports = {
-    query,
-    execute
+    query
 }

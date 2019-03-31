@@ -35,9 +35,9 @@ async function NormalAuth(email, password) {
     }
 }
 
-async function updatePassword(email, password) {
+ function updatePassword(email, password) {
     var id = getCustomerID(email);
-    return await db.execute('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [password, id]);
+    return db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [password, id]);
 
 }
 
