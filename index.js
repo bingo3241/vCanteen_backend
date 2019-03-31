@@ -38,8 +38,9 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
         var hash = passwordModule.hash(newpassword);
         console.log('Hash: '+hash)
         await customersModel.updatePassword(email,hash);
+        console.log('Password has been updated')
         emailModule.mailto(newpassword,email);
-        res.status(200).json('New password is sent! '+results);
+        res.status(200).json('Success');
     } else {
         res.status(404).json('Error!');
     }

@@ -10,7 +10,7 @@ function get(id) {
 
 async function getCustomerID(email) {
     var temp = await db.query('SELECT Customers.customer_id FROM Customers WHERE Customers.email = ?', [email])
-    return temp[0].customer_id;
+    return Number(temp[0].customer_id);
 }
 
 async function isInDatabase(email) {
@@ -35,9 +35,10 @@ async function NormalAuth(email, password) {
     }
 }
 
- function updatePassword(email, password) {
-    var id = getCustomerID(email);
-    return db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [password, id]);
+ async function updatePassword(email, passwd) {
+    var customer_id = await getCustomerID(email);
+    console.log('CustomerID: '+customer_id)
+    return db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [passwd, customer_id]);
 
 }
 
