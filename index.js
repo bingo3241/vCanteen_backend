@@ -7,6 +7,7 @@ app.use(bodyParser.urlencoded({extended: true}))
 
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
+const vendorsModel = require('./models/vendors')
 
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
@@ -94,6 +95,21 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
         console.log('email: '+email)
 
     }
+})
+
+app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
+    var email = req.body.email
+    var password = req.body.password;
+    if(await vendorsModel.NormalAuth(email, password)) {
+        var result = new Object()
+        result.status = 'success'
+        result.vendor_id = await vendorsModel.getVendorID(email)
+        result.token = 'wip jwt'
+        res.status(200).json(result)
+    } else {
+        res.status(404).json({status: 'error'})
+    }
+    console.log('email: '+email)
 
 })
   
