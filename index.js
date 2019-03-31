@@ -1,6 +1,5 @@
 var app = require('express')();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -33,7 +32,7 @@ app.get('/', function(req, res){
 
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
-    if(customersModel.isInDatabase(email)) {
+    if(await customersModel.isInDatabase(email)) {
         var newpassword = passwordModule.generate();
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
@@ -42,7 +41,7 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
         emailModule.mailto(newpassword,email);
         res.status(200).json('New password is sent! '+results);
     } else {
-        res.status(404).json('Email not found');
+        res.status(404).json('Error!');
     }
 })
 
@@ -75,7 +74,6 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
             result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
             result.token = 'wip jwt'
-            console.log(result);
             res.status(200).json(result)
         } else {
             res.status(404).json({status: 'error'})
@@ -88,7 +86,6 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
             result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
             result.token = 'wip jwt'
-            console.log(result);
             res.status(200).json(result)
         } else {
             res.status(404).json({status: 'error'})
@@ -98,11 +95,6 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
     }
 
 })
-
-
-io.on('connection', function(socket){
-    console.log('a user connected :'+socket.id);
-});
   
 let port = process.env.PORT;
 if (port == null || port == "") {
