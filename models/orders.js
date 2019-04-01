@@ -36,16 +36,15 @@ const db = require('../db/db');
 // }
 
 function getInProgress(customerId) {
-  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+  return db.query("SELECT Orders.order_id , Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status,  DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') "+
                                   "FROM Orders, Contains, Food, Vendors "+
                                   "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
-  
 }
 
 function getHistory(customerId) {
-  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') "+
                   "FROM Orders, Contains, Food, Vendors "+
-                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED')", [customerId])
+                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
 }
 
 async function updateOrderStatus(id, orderStatus) {
