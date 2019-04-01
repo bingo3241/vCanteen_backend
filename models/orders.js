@@ -35,32 +35,21 @@ const db = require('../db/db');
    
 // }
 
-async function getMenuItems(customerId) {
-  // var inProgress = [];
-  // var temp = await db.query("SELECT DISTINCT Orders.order_id, Orders.order_name, Orders.order_name_extra, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
-  //                           "FROM Orders, Contains, Food, Vendors "+
-  //                           "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'DONE' OR Orders.order_status = 'COOKING')", [customerId])
-  // temp.forEach(({order_id,order_name,order_name_extra,food_image,order_price,restaurant_name,order_status,created_at}) => {
-  //     var temp2 = db.query("SELECT Food.food_image "+
-  //     "FROM Orders, Contains, Food "+
-  //     "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.order_id = ?", [order_id])
-  //     var image = temp2.food_image
-  //     inProgress.push({order_id,order_name,order_name_extra, 
-  //       food_image: image,
-  //       order_price,restaurant_name,order_status,created_at});
-  // })
-
-  return {inProgress: await db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+function getInProgress(customerId) {
+  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
                                   "FROM Orders, Contains, Food, Vendors "+
-                                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId]),
+                                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
   
-  history: await db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
-                              "FROM Orders, Contains, Food, Vendors "+
-                              "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED')", [customerId])
-  }
+}
+
+function getHistory(customerId) {
+  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, Orders.created_at "+
+                  "FROM Orders, Contains, Food, Vendors "+
+                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED')", [customerId])
 }
 
 module.exports = {
   // getSaleRecord,
-  getMenuItems
+  getInProgress,
+  getHistory
 }

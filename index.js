@@ -53,9 +53,14 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
     
 // })
 
-app.get('/v1/orders/customers/:customerId', async (req,res) => {
+app.get('/v1/orders/customers/:customerId/history', async (req,res) => {
     var customerId = req.params.customerId;
-    res.status(200).json(await ordersModel.getMenuItems(customerId))
+    res.status(200).json(await ordersModel.getHistory(customerId))
+})
+
+app.get('/v1/orders/customers/:customerId/in-progress', async (req, res) => {
+    var customerId = req.params.customerId;
+    res.status(200).json(await ordersModel.getInProgress(customerId))
 })
 
 app.get('/customer', async (req,res) => {
