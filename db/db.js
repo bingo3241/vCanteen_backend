@@ -49,13 +49,6 @@ const dbUser = 'root';
 const dbPassword = 'root';
 const db = 'vcanteen-db-v1';
 
-// const fixieConnection = new SocksConnection(mysqlServer, {
-//   user: fixieValues[0],
-//   pass: fixieValues[1],
-//   host: fixieValues[2],
-//   port: fixieValues[3],
-// });
-
 var pool = mysql.createPool({
   user: dbUser,
   password: dbPassword,

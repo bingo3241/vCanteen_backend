@@ -36,13 +36,13 @@ const db = require('../db/db');
 // }
 
 function getInProgress(customerId) {
-  return db.query("SELECT Orders.order_id , Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status,  DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') "+
+  return db.query("SELECT Orders.order_id , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurntName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') AS createdAt "+
                                   "FROM Orders, Contains, Food, Vendors "+
                                   "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
 }
 
 function getHistory(customerId) {
-  return db.query("SELECT Orders.order_id, Orders.order_name, Orders.order_name_extra, Food.food_image, Orders.order_price, Vendors.restaurant_name, Vendors.restaurant_number, Orders.order_status, DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') "+
+  return db.query("SELECT Orders.order_id , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurntName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') AS createdAt "+
                   "FROM Orders, Contains, Food, Vendors "+
                   "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
 }
