@@ -12,6 +12,18 @@ const vendorsModel = require('./models/vendors')
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
 
+const jwt = require('./library/jwt');
+
+const verifyJWT= (req, res, next) => {
+    var token = req.body.token
+    if(jwt.verify(token) != false) {
+        next()
+    }
+    else {
+        res.status(403).json('Token is invalid or expired')
+    }
+ }
+
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
@@ -80,7 +92,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
             var result = new Object()
             result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
-            result.token = 'wip jwt'
+            result.token = jwt.sign(email);
             res.status(200).json(result)
         } else {
             res.status(404).json({status: 'error'})
@@ -92,7 +104,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
             var result = new Object()
             result.status = 'success'
             result.customer_id = await customersModel.getCustomerID(email)
-            result.token = 'wip jwt'
+            result.token = jwt.sign(email)
             res.status(200).json(result)
         } else {
             res.status(404).json({status: 'error'})
@@ -109,12 +121,24 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
         var result = new Object()
         result.status = 'success'
         result.vendor_id = await vendorsModel.getVendorID(email)
-        result.token = 'wip jwt'
+        result.token = jwt.sign(email);
         res.status(200).json(result)
     } else {
         res.status(404).json({status: 'error'})
     }
     console.log('email: '+email)
+
+})
+
+app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
+    var token = req.body.token
+    if(jwt.verify(token) == false) {
+        console.log("Verify failed")
+        res.json({expired: true})
+    } else {
+        res.json({expired: jwt.isExpired(token)})
+    }
+
 
 })
   

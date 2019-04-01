@@ -1,3 +1,1 @@
-const db = require('./db/db')
-
-db.query("UPDATE Customers SET passwd = 'password' WHERE customer_id = 2")
+console.log(Math.floor(Date.now() / 1000))
