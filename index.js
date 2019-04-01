@@ -321,19 +321,20 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
   
   app.get("/v1/orders/:oid/status-change", async (req, res) => {
     let oid = req.params.oid
-    let status = req.body.order_status
-    let [err, result] = await ordersModel.updateOrderStatus(oid, status)
-    if (err == "order_status_not_exist") {
-      res.status(400).json({
-        message: err
-      })
-    } else if (err) {
-      res.status(500).json(err)
-    } else if (result.affectedRows == 0){
-      res.status(404).send()
-    }else {
-      res.json(await ordersModel.getOrderStatus(id))
-    }
+    let status = req.body.orderStatus
+    let [err, result] = await orderModel.updateOrderStatus(oid, status)
+//     if (err == "order_status_not_exist") {
+//       res.status(400).json({
+//         message: err
+//       })
+//     } else if (err) {
+//       res.status(500).json(err)
+//     } else if (result.affectedRows == 0){
+//       res.status(404).send()
+//     }else {
+//       res.json(await ordersModel.getOrderStatus(id))
+//     }
+    res.json(result)
   })
   
   app.post("/v1/orders/new", async (req, res) => {
