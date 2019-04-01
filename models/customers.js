@@ -46,6 +46,21 @@ async function insertFacebook(first_name, last_name, email, profile_url) {
     return await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', firstname = ?, lastname = ?, customer_image = ?, email = ? ", [first_name, last_name, profile_url, email])
 }
 
+async function changePasswords(pwd,customer_id) {
+    try {
+        let result = await db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [pwd,customer_id])
+        return [null, result]
+    }
+    catch (err) {
+        return [err, null]
+    }
+}
+
+async function getApprovedVendor() { //id name, number, image, status
+    let result = db.query("select vendor_id as vendorId, restaurant_name as restaurantName, restaurant_number as restaurantNumber, vendor_image as vendorImage, vendor_status as vendorStatus from Vendors where admin_permission = 'APPROVED'")
+    return result
+}
+
 module.exports = {
     getAll,
     get,
@@ -53,5 +68,7 @@ module.exports = {
     isInDatabase,
     NormalAuth,
     updatePassword,
-    insertFacebook
+    insertFacebook,
+    changePasswords,
+    getApprovedVendor
 }

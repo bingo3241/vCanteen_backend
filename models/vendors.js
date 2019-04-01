@@ -39,7 +39,158 @@ async function NormalAuth(email, password) {
     var vendor_id = await getCustomerID(email);
     console.log('VendorID: '+customer_id)
     return db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [passwd, vendor_id]);
+}
 
+async function updateOrderStatus(order_status,order_id) {
+    try{
+        let result = await db.query('UPDATE Orders SET order_status = ? WHERE order_id = ?', [order_status,order_id])
+        return [null,result]
+    } 
+    catch(err) {
+        return [err,null]
+    }
+}
+
+async function getCombMenu(vendor_id){
+    try{
+        let result = await db.query('SELECT food_id,food_name,food_price,food_image,food_status FROM Food WHERE vendor_id = ? AND (food_type = "COMBINATION_MAIN" OR food_type = "COMBINATION_BASE") ', [vendor_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getAlaMenu(vendor_id){
+    try{
+        let result = await db.query('SELECT food_id,food_name,food_price,food_image,food_status FROM Food WHERE vendor_id = ? AND food_type = "ALACARTE" ', [vendor_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getOrder(vendor_id){
+    try{
+        let result = await db.query('SELECT created_at,order_name,order_name_extra FROM Orders WHERE vendor_id = ? AND order_status = "COOKING" ', [vendor_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getVendorInfo(vendor_id){
+    try{
+        let result = await db.query('SELECT restaurant_name,vendor_status,email,vendor_image,account_type FROM Vendors WHERE vendor_id = ? ', [vendor_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getProvider(vendor_id){
+    try{
+        let result = await db.query('SELECT service_provider FROM Vendor_Links NATURAL JOIN VendorMoneyAccounts WHERE vendor_id = ? ', [vendor_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function editMenu(vendor_id,food_id,food_name,food_price,food_status,food_type,food_image){
+    try{
+        let result = await db.query('UPDATE Food SET food_name = ?,food_price = ?,food_status = ?,food_type = ?,food_image = ? WHERE vendor_id = ? AND food_id =?', 
+        [food_name,food_price,food_status,food_type,food_image,vendor_id,food_id])
+        return [null,result]
+    } 
+    catch(err) {
+        return [err,null]
+    }
+}
+
+async function createMenu(vendor_id,food_name,food_price,food_status,food_type,food_image){
+    try{
+        let result = await db.query("INSERT INTO Food(vendor_id,food_name,food_price,food_status,food_type,food_image) values(?, ?, ?, ?, ?, ?)", 
+        [vendor_id,food_name,food_price,food_status,food_type,food_image])
+        return [null, result.insertId]
+    }catch(err) {
+        return [err, null]
+    }
+}
+
+async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,food_image){
+    try{
+        let result = await db.query('SELECT food_id FROM Food WHERE vendor_id=? AND food_name=? AND food_price=? AND food_status=? AND food_type=? AND food_image=?', 
+        [vendor_id,food_name,food_price,food_status,food_type,food_image])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,food_image){
+    try{
+        let result = await db.query('SELECT food_id FROM Food WHERE vendor_id=? AND food_name=? AND food_price=? AND food_status=? AND food_type=? AND food_image=?', 
+        [vendor_id,food_name,food_price,food_status,food_type,food_image])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function getMenu(vendor_id,food_id){
+    try{
+        let result = await db.query('SELECT food_id,food_name,food_price,food_status,food_image FROM Food WHERE vendor_id=? AND food_id=?' , [vendor_id,food_id])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function delMenu(vendor_id,food_id){
+    try {
+        let result = await db.query("DELETE FROM Food WHERE vendor_id = ? AND food_id = ?", [vendor_id,food_id])
+        return [null, result]
+    }
+    catch (err) {
+        return [err, null]
+    }
+}
+
+async function updateVendorStatus(vendor_id,vendor_status){
+    try{
+        let result = await db.query('UPDATE Vendors SET vendor_status = ? WHERE vendor_id = ?' , 
+        [vendor_status,vendor_id])
+        return [null,result]
+    } 
+    catch(err) {
+        return [err,null]
+    }
+}
+
+async function editMenuStatus(vendor_id,menu){  
+    try{
+        var a = []
+        for(i=0; i<menu.length;i++){
+        result = await db.query('UPDATE Food SET food_status = ? WHERE food_id =?  AND vendor_id = ? ', 
+        [menu[i].food_status,menu[i].food_id,vendor_id])
+            if(result.affectedRows == 0){
+            a.push(menu[i].food_id)
+            }
+        }
+        console.log(a)
+        return a
+    } 
+    catch(err) {
+        return [-1,err]
+    }
 }
 
 module.exports = {
@@ -48,5 +199,18 @@ module.exports = {
     getVendorID,
     isInDatabase,
     NormalAuth,
-    updatePassword
+    updatePassword,
+    updateOrderStatus,
+     getCombMenu,
+     getAlaMenu,
+     getOrder,
+     getVendorInfo,
+     getProvider,
+     editMenu,
+     createMenu,
+     getFoodId,
+     getMenu,
+     delMenu,
+     updateVendorStatus,
+     editMenuStatus
 }
