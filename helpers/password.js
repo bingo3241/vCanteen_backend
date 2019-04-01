@@ -8,7 +8,6 @@ function generate ( len ) {
     var uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     var password = "";
     var character = "";
-    var crunch = true;
     while( password.length<length ) {
         entity1 = Math.ceil(lowercase.length * Math.random()*Math.random());
         entity2 = Math.ceil(numeric.length * Math.random()*Math.random());
@@ -24,16 +23,12 @@ function generate ( len ) {
 }
 
 function hash (input) {
-    var output = sjcl.hash.sha256.hash(newpassword);
-    return output;
+    var output = sjcl.hash.sha256.hash(input);
+    return sjcl.codec.hex.fromBits(output).toString();
 }
 
-function toUpperCase(input) {
-    return sjcl.codec.hex.fromBits(input).toString().toUpperCase();
-}
 module.exports = {
     generate,
-    hash,
-    toUpperCase
+    hash
 }
 

@@ -37,6 +37,7 @@
 const SocksConnection = require('socksjs');
 const mysql = require('mysql2');
 const fixieUrl = process.env.FIXIE_SOCKS_HOST;
+// const fixieUrl = 'fixie:3Dlt60eCtxJ07Zw@speedway.usefixie.com:1080';
 const fixieValues = fixieUrl.split(new RegExp('[/(:\\/@)/]+'));
 
 const mysqlServer = {
@@ -48,31 +49,47 @@ const dbUser = 'root';
 const dbPassword = 'root';
 const db = 'vcanteen-db-v1';
 
-const fixieConnection = new SocksConnection(mysqlServer, {
-  user: fixieValues[0],
-  pass: fixieValues[1],
-  host: fixieValues[2],
-  port: fixieValues[3],
-});
+// const fixieConnection = new SocksConnection(mysqlServer, {
+//   user: fixieValues[0],
+//   pass: fixieValues[1],
+//   host: fixieValues[2],
+//   port: fixieValues[3],
+// });
 
-const connection = mysql.createConnection({
+var pool = mysql.createPool({
   user: dbUser,
   password: dbPassword,
   database: db,
-  stream: fixieConnection
+  stream: function() {
+    return new SocksConnection(mysqlServer, {
+      user: fixieValues[0],
+      pass: fixieValues[1],
+      host: fixieValues[2],
+      port: fixieValues[3],
+    });
+ }
 });
 
 function query(sql, params = []) {
   return new Promise( (resolve, reject) => {
-    connection.query(sql, params, function(err, rows, fields) {
-      if (err) reject(err);
-      console.log('Result: ', rows);
-      resolve(rows);
-      fixieConnection.dispose();
+    pool.getConnection(function(err, connection) {
+      if(err) { 
+        console.log(err); 
+        reject(err) 
+      }
+      connection.query(sql, params, function(err, results) {
+        pool.releaseConnection(connection); // always put connection back in pool after last query
+        if(err) { 
+          console.log(err);  
+          reject(err)
+        }
+        resolve(results)
+      });
     });
-  })
-
+  }) 
 }
+
+
 module.exports = {
     query
 }
