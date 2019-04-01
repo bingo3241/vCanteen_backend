@@ -322,7 +322,7 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
   app.put("/v1/orders/:oid/status-change", async (req, res) => {
     let oid = req.params.oid
     let status = req.body.orderStatus
-    let [err, result] = await orderModel.updateOrderStatus(oid, status)
+    let [err, result] = await ordersModel.updateOrderStatus(oid, status)
   // if (err == "order_status_not_exist") {
   //   res.status(400).json({
   //     message: err
