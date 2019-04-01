@@ -48,17 +48,17 @@ function getHistory(customerId) {
 }
 
 async function updateOrderStatus(id, orderStatus) {
-//   if( !orderStatusDomains.includes(orderStatus)){
-//       return ["order_status_not_exist", null]
-//   }
-  try {
-      let result = await db.query("update Orders set order_status = ? where order_id = ? and order_status = 'DONE'", [orderStatus, id])
-      let del = await db.query("delete from Is_At where order_id = ?", [id])
-      return [null, result]
-  }
-  catch (err) {
-      return [err, null]
-  }
+// if( !orderStatusDomains.includes(orderStatus)){
+    //     return ["order_status_not_exist", null]
+    // }
+    try {
+        let result = await db.query("update Orders set order_status = ? where order_id = ? and order_status = 'DONE'", [orderStatus, id])
+        let del = await db.query("delete from Is_At where order_id = ?", [id])
+        return [null, result]
+    }
+    catch (err) {
+        return [err, null]
+    }
 }
 
 async function getOrderStatus(id) {
