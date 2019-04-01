@@ -42,11 +42,16 @@ async function NormalAuth(email, password) {
 
 }
 
+async function insertFacebook(first_name, last_name, email, profile_url) {
+    return await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', firstname = ?, lastname = ?, customer_image = ?, email = ? ", [first_name, last_name, profile_url, email])
+}
+
 module.exports = {
     getAll,
     get,
     getCustomerID,
     isInDatabase,
     NormalAuth,
-    updatePassword
+    updatePassword,
+    insertFacebook
 }
