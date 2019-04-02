@@ -60,7 +60,8 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
 })
 
 app.put('/v1/user-authentication/customer/password/change' , async (req,res) => {
-    var customer_id = req.body.customerId;
+    var email = req.body.email;
+    var customer_id = await customersModel.getCustomerID(email)
     console.log(customer_id);
     var pwd = req.body.passwordNew;
     console.log(pwd);
@@ -72,6 +73,31 @@ app.put('/v1/user-authentication/customer/password/change' , async (req,res) => 
       }else {
         res.status(200).send()
       }
+})
+
+app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
+  var email = req.body.email
+  var vendor_id = await vendorsModel.getVendorID(email);
+    console.log(customer_id);
+    var pwd = req.body.passwordNew;
+    console.log(pwd);
+    let [err, result] = await vendorsModel.changePasswords(pwd,vendor_id)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      }
+})
+
+app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
+  var email = req.body.email
+  if(await customersModel.isInDatabase(email) == true) {
+    res.status(200).send()
+  }else {
+    res.status(404).send()
+  }
 })
 
 app.put('/v1/vendor-main/orderId/status', async (req,res) => {
@@ -272,7 +298,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
         var result = new Object()
         result.status = 'success'
         result.vendor_id = await vendorsModel.getVendorID(email)
-        result.token = jwt.sign(email);
+        result.vendorToken = jwt.sign(email);
         res.status(200).json(result)
     } else {
         res.status(404).json({status: 'error'})
@@ -300,55 +326,55 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
     }
   })
   
-  app.get("/v1/orders/:vid/menu", async (req, res) => {                     
-    let vid = req.params.vid
-    let result = await ordersModel.getVendorMenu(vid)
-    res.json(result)
-  })
+app.get("/v1/orders/:vid/menu", async (req, res) => {                     
+  let vid = req.params.vid
+  let result = await ordersModel.getVendorMenu(vid)
+  res.json(result)
+})
+
+app.get("/v1/orders/:fid/menu/:vid", async (req, res) => {
+  let vid = req.params.vid
+  let fid = req.params.fid
+  let foodAndExtra = await ordersModel.getFoodAndExtra(vid, fid)
+  res.json(foodAndExtra)
+})
   
-  app.get("/v1/orders/:fid/menu/:vid", async (req, res) => {
-    let vid = req.params.vid
-    let fid = req.params.fid
-    let foodAndExtra = await ordersModel.getFoodAndExtra(vid, fid)
-    res.json(foodAndExtra)
-  })
+app.get("/v1/orders/:vid/combination", async (req, res) => {
+  let vid = req.params.vid
+  let result = await ordersModel.getBaseMainExtraList(vid)
+  res.json(result)
+})
+
+app.put("/v1/orders/:oid/status-change", async (req, res) => {
+  let oid = req.params.oid
+  let status = req.body.orderStatus
+  let [err, result] = await ordersModel.updateOrderStatus(oid, status)
+// if (err == "order_status_not_exist") {
+//   res.status(400).json({
+//     message: err
+//   })
+// } else if (err) {
+//   res.status(500).json(err)
+// } else if (result.affectedRows == 0){
+//   res.status(404).send()
+// }else {
+//   res.json(await orderModel.getOrderStatus(oid))
+// }
+  res.json(result)
+})
   
-  app.get("/v1/orders/:vid/combination", async (req, res) => {
-    let vid = req.params.vid
-    let result = await ordersModel.getBaseMainExtraList(vid)
-    res.json(result)
-  })
-  
-  app.put("/v1/orders/:oid/status-change", async (req, res) => {
-    let oid = req.params.oid
-    let status = req.body.orderStatus
-    let [err, result] = await ordersModel.updateOrderStatus(oid, status)
-  // if (err == "order_status_not_exist") {
-  //   res.status(400).json({
-  //     message: err
-  //   })
-  // } else if (err) {
-  //   res.status(500).json(err)
-  // } else if (result.affectedRows == 0){
-  //   res.status(404).send()
-  // }else {
-  //   res.json(await orderModel.getOrderStatus(oid))
-  // }
-    res.json(result)
-  })
-  
-  app.post("/v1/orders/new", async (req, res) => {
-    let {orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
-    //let foods = req.body.foods
-    let response = await ordersModel.postNewOrder(orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
-    res.json(response)
-  
-  })
-  
-  app.get("/v1/customer-main/main", async (req, res) => {
-    let result = await customersModel.getApprovedVendor()
-    res.json(result)
-  })
+app.post("/v1/orders/new", async (req, res) => {
+  let {orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
+  //let foods = req.body.foods
+  let response = await ordersModel.postNewOrder(orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  res.json(response)
+
+})
+
+app.get("/v1/customer-main/main", async (req, res) => {
+  let result = await customersModel.getApprovedVendor()
+  res.json(result)
+})
   
 let port = process.env.PORT;
 if (port == null || port == "") {

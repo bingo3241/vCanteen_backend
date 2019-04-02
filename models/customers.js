@@ -16,10 +16,10 @@ async function getCustomerID(email) {
 async function isInDatabase(email) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Customers WHERE email = ?', [email])
     if( temp[0].Count == 1 ){
-        console.log("In database?: true")
+        console.log(""+email+" in database?: true")
         return true;
     } else {
-        console.log("In database?: false")
+        console.log(""+email+" in database?: false")
         return false;
     }
 }

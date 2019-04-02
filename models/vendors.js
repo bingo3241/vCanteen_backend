@@ -133,17 +133,6 @@ async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,fo
     }
 }
 
-async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,food_image){
-    try{
-        let result = await db.query('SELECT food_id FROM Food WHERE vendor_id=? AND food_name=? AND food_price=? AND food_status=? AND food_type=? AND food_image=?', 
-        [vendor_id,food_name,food_price,food_status,food_type,food_image])
-        return result
-    } 
-    catch(err) {
-        return err
-    }
-}
-
 async function getMenu(vendor_id,food_id){
     try{
         let result = await db.query('SELECT food_id,food_name,food_price,food_status,food_image FROM Food WHERE vendor_id=? AND food_id=?' , [vendor_id,food_id])
@@ -193,6 +182,15 @@ async function editMenuStatus(vendor_id,menu){
     }
 }
 
+async function changePasswords(pwd,vendor_id) {
+    try {
+        let result = await db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [pwd,vendor_id])
+        return [null, result]
+    } catch (err) {
+        return [err, null]
+    }
+}
+
 module.exports = {
     getAll,
     get,
@@ -212,5 +210,6 @@ module.exports = {
      getMenu,
      delMenu,
      updateVendorStatus,
-     editMenuStatus
+     editMenuStatus,
+     changePasswords
 }
