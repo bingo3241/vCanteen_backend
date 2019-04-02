@@ -1,9 +1,7 @@
-# Project for ICE Capstone, Software Engineering, and Database Systems courses of Chulalongkorn University.
+# 3rd Year Project for ICE Capstone, Software Engineering, and Database Systems courses of Chulalongkorn University.
 
 ## vCanteen (Backend)
-Implenenting socket programming to create a game called "Escape Plan"
-Backend of this game use Socket.io library to implement socket programming where the frontend is Android Application where github link can be accessable here
->> https://github.com/tann9949/Escape_Plan.git
+Backend of vCanteen application which will be deployed to heroku.
 
 ### Group Members:
 1.  Boonsita 	Vatcharakomonphan	5931294521 (Project Manager)
