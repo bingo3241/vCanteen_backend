@@ -1,39 +1,29 @@
 const db = require('../db/db');
 
-// async function getSaleRecord(vendorId) {
-//     let orders = db.query("select distinct orders.order_id from orders, contain, food where orders.order_id = contain.order_id AND food.food_id = contain.food_id AND (Orders.order_status = 'DONE' or Orders.order_status = 'COLLECTED' or Orders.order_status = 'TIMEOUT') AND orders.vendor_id = ?", [vendorId]);
-//     let currentOrderID = null;
-//     let allFoodType = ['ALARCATE','COMBINATION_BASE','COMBINATION_MAIN','COMBINATION_EXTRA'];
+async function getSaleRecords(vendorId) {
+    var output = new Object() 
+    output.order = await db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Orders.order_price AS orderPrice "+
+                                "FROM Orders "+
+                                "WHERE Orders.vendor_id = ? AND (Orders.order_status = 'COLLECTED' OR Orders.order_status = 'DONE' OR Orders.order_status = 'TIMEOUT') AND DATE(Orders.created_at) = CURDATE()", [vendorId])
+    
+    var temp = await db.query(  "SELECT order_name AS orderName, COUNT(order_name) AS amount "+
+                                "FROM Orders "+
+                                "WHERE DATE(created_at) = curdate() AND vendor_id = ? "+
+                                "GROUP BY order_name "+
+                                "ORDER BY COUNT(order_name) DESC "+
+                                "LIMIT 1", [vendorId])
 
-//     orders.forEach(({orderID,foodName,foodType}) => {
-//       if(!tempMap[foodName]){
-//         tempMap[foodName] = foodType;
-//       }
-//       if(currentOrderID !== orderID){
-//       currentOrderID = orderID;
-//         output.push({orderID,foodName});
-//       }else{
-//         const target = output.length - 1;
-//         output[target].foodName = output[target].foodName + ', ' + foodName 
-//       }
-//     })
-
-//     const finalOutput = output.map((element) => { 
-//       const {foodName} = element;
-//       const splittedFood = foodName.split(',');
-//       const sorted = splittedFood.sort((current,next) => {
-//         const scurrent = current.trim();
-//         const snext = next.trim();
-//         const currentFoodType = tempMap[scurrent];
-//         const nextFoodType = tempMap[snext];
-//         return allFoodType.indexOf(currentFoodType) > allFoodType.indexOf(nextFoodType);
-//       });
-//       return {...element,foodName:sorted.join()};
-//     })
-
-//     return finalOutput;
-   
-// }
+    output.bestSeller = temp[0]
+    temp2 = await db.query("SELECT SUM(order_price) AS sum "+
+                                            "FROM Orders "+
+                                            "WHERE DATE(created_at) = curdate() AND vendor_id = ?",[vendorId])
+    
+    output.totalDailySales = {
+        sum: Number(temp2[0].sum)
+    }
+    return output
+    
+}
 
 function getInProgress(customerId) {
   return db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%m/%d/%Y %H:%i') AS createdAt "+
@@ -195,5 +185,6 @@ module.exports = {
   getVendorMenu,
   getFoodAndExtra,
   getBaseMainExtraList,
-  postNewOrder
+  postNewOrder,
+  getSaleRecords
 }

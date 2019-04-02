@@ -28,21 +28,6 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
-// app.get('/forget_password', function(req, res) {
-//     // var email = req.body.email;
-//     var email = 'bingo6689@gmail.com';
-//     //GENERATE NEW PASSWORD
-//     var newpassword = passwordModule.generate();
-//     console.log('New password: '+newpassword);
-//     //HASHING NEW PASSWORD
-//     var hash = passwordModule.hash(newpassword);
-//     console.log('HASH :'+ passwordModule.toUpperCase(hash));
-//     res.send('<h><b>New password has been sent to your email<b></h>')
-//     //SENT PLAINTEXT NEW PASSWORD TO USER
-//     emailModule.mailto(newpassword, email);
-//     //TODO: INSERT HASHED NEW PASSWORD INTO DB
-// })
-
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
     if(await customersModel.isInDatabase(email)) {
@@ -245,11 +230,11 @@ app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
   }
 })
 
-// app.get('/v1/sales-record/vendor/sales', async (req,res) => { //wip
-//     var vendorId = req.body.vendorId;
-//     res.json(202, await ordersModel.getSaleRecord(vendorId))
+app.get('/v1/sales-record/vendor/:vendorId/sales', async (req,res) => { //wip
+    var vendorId = req.params.vendorId;
+    res.status(200).json(await ordersModel.getSaleRecords(vendorId))
     
-// })
+})
 
 app.get('/v1/orders/customers/:customerId/history', async (req,res) => {
     var customerId = req.params.customerId;
