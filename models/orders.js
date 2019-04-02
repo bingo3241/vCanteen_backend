@@ -37,12 +37,9 @@ function getHistory(customerId) {
                   "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACART' OR Food.food_type = 'COMBINATION_MAIN')", [customerId])
 }
 
-async function updateOrderStatus(id, orderStatus) {
-// if( !orderStatusDomains.includes(orderStatus)){
-    //     return ["order_status_not_exist", null]
-    // }
+async function updateOrderStatusToCollected(id) {
     try {
-        let result = await db.query("update Orders set order_status = ? where order_id = ? and order_status = 'DONE'", [orderStatus, id])
+        let result = await db.query("update Orders set order_status = 'COLLECTED' where order_id = ? and order_status = 'DONE'", [id])
         let del = await db.query("delete from Is_At where order_id = ?", [id])
         return [null, result]
     }
@@ -125,7 +122,7 @@ async function getBaseMainExtraList(vid) {
   return response
 }
 
-async function postNewOrder(orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
+async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
   let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
   let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
   custAcc[0].balance -= totalPrice
@@ -156,7 +153,7 @@ module.exports = {
   // getSaleRecord,
   getInProgress,
   getHistory,
-  updateOrderStatus,
+  updateOrderStatusToCollected,
   getOrderStatus,
   getSlotNo,
   getVendorMenu,

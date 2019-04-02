@@ -346,10 +346,9 @@ app.get("/v1/orders/:vid/combination", async (req, res) => {
   res.json(result)
 })
 
-app.put("/v1/orders/:oid/status-change", async (req, res) => {
+app.put("/v1/orders/:oid/status/collected", async (req, res) => {
   let oid = req.params.oid
-  let status = req.body.orderStatus
-  let [err, result] = await ordersModel.updateOrderStatus(oid, status)
+  let [err, result] = await ordersModel.updateOrderStatusToCollected(oid)
 // if (err == "order_status_not_exist") {
 //   res.status(400).json({
 //     message: err
@@ -365,9 +364,9 @@ app.put("/v1/orders/:oid/status-change", async (req, res) => {
 })
   
 app.post("/v1/orders/new", async (req, res) => {
-  let {orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
+  let {orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
   //let foods = req.body.foods
-  let response = await ordersModel.postNewOrder(orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  let response = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
   res.json(response)
 
 })
