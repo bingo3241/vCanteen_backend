@@ -333,7 +333,7 @@ app.get("/v1/orders/:vid/menu", async (req, res) => {
   res.json(result)
 })
 
-app.get("/v1/orders/:fid/menu/:vid", async (req, res) => {
+app.get("/v1/orders/:vid/menu/:fid", async (req, res) => {
   let vid = req.params.vid
   let fid = req.params.fid
   let foodAndExtra = await ordersModel.getFoodAndExtra(vid, fid)
