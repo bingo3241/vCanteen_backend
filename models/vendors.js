@@ -101,10 +101,10 @@ async function getProvider(vendor_id){
     }
 }
 
-async function editMenu(vendor_id,food_id,food_name,food_price,food_status,food_type,food_image){
+async function editMenu(vendorId,foodId,foodName,price,foodStatus,foodType,foodImage){
     try{
         let result = await db.query('UPDATE Food SET food_name = ?,food_price = ?,food_status = ?,food_type = ?,food_image = ? WHERE vendor_id = ? AND food_id =?', 
-        [food_name,food_price,food_status,food_type,food_image,vendor_id,food_id])
+        [foodName,price,foodStatus,foodType,foodImage,vendorId,foodId])
         return [null,result]
     } 
     catch(err) {
@@ -112,10 +112,10 @@ async function editMenu(vendor_id,food_id,food_name,food_price,food_status,food_
     }
 }
 
-async function createMenu(vendor_id,food_name,food_price,food_status,food_type,food_image){
+async function createMenu(vendorId,foodName,price,foodStatus,foodType,foodImage){
     try{
         let result = await db.query("INSERT INTO Food(vendor_id,food_name,food_price,food_status,food_type,food_image) values(?, ?, ?, ?, ?, ?)", 
-        [vendor_id,food_name,food_price,food_status,food_type,food_image])
+        [vendorId,foodName,price,foodStatus,foodType,foodImage])
         return [null, result.insertId]
     }catch(err) {
         return [err, null]
