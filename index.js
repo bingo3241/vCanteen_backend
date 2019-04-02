@@ -102,9 +102,9 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
 })
 
 app.put('/v1/vendor-main/orderId/status', async (req,res) => {
-    let order_id = req.body.order_id;
+    let order_id = req.body.orderId;
     console.log(order_id);
-    var order_status = req.body.order_status;
+    var order_status = req.body.orderStatus;
     console.log(order_status);
     let [err, result] = await vendorsModel.updateOrderStatus(order_status,order_id)
     if (err) {
@@ -150,9 +150,9 @@ app.get('/v1/settings/:vendorId/info' , async(req,res) => {
 })
 
 app.put('/v1/menu-management/vendorId/menu/foodId' , async(req,res) => {
-  let {vendor_id,food_id,food_name,food_price,food_status,food_type,food_image} = req.body
+  let {vendorId,foodId,foodName,price,foodStatus,foodType,foodImage} = req.body
   //console.log(vendor_id,food_id,food_name,food_price,food_status,food_type,food_image)
-  let [err,result] = await vendorsModel.editMenu(vendor_id,food_id,food_name,food_price,food_status,food_type,food_image)
+  let [err,result] = await vendorsModel.editMenu(vendorId,foodId,foodName,price,foodStatus,foodType,foodImage)
   if (err) {
     res.status(500).json(err)
   } else if (result.affectedRows == 0){
@@ -163,8 +163,8 @@ app.put('/v1/menu-management/vendorId/menu/foodId' , async(req,res) => {
 })
 
 app.post('/v1/menu-management/vendorId/menu', async(req,res) => {
-  let {vendor_id,food_name,food_price,food_status,food_type,food_image} = req.body
-  let [err,insertId] = await vendorsModel.createMenu(vendor_id,food_name,food_price,food_status,food_type,food_image)
+  let {vendorId,foodName,price,foodStatus,foodType,foodImage} = req.body
+  let [err,insertId] = await vendorsModel.createMenu(vendorId,foodName,price,foodStatus,foodType,foodImage)
   if (err) {
      res.status(500).json(err)
    } else {
@@ -184,8 +184,8 @@ app.get('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
 })
 
 app.delete('/v1/menu-management/vendorId/menu/foodId' , async (req,res) => {
-  let vendor_id = req.body.vendor_id
-  let food_id = req.body.food_id
+  let vendor_id = req.body.vendorId
+  let food_id = req.body.foodId
   let [err, result] = await vendorsModel.delMenu(vendor_id,food_id)
   if (err) {
     res.status(500).json(err)
@@ -197,8 +197,8 @@ app.delete('/v1/menu-management/vendorId/menu/foodId' , async (req,res) => {
 })
 
 app.put('/v1/settings/vendorId/status' , async(req,res) => {
-  let vendor_id = req.body.vendor_id
-  let vendor_status = req.body.vendor_status
+  let vendor_id = req.body.vendorId
+  let vendor_status = req.body.vendorStatus
   let [err,result] = await vendorsModel.updateVendorStatus(vendor_id,vendor_status)
   if (err) {
     res.status(500).json(err)
@@ -210,7 +210,7 @@ app.put('/v1/settings/vendorId/status' , async(req,res) => {
 })
 
 app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
-  let vendor_id = req.body.vendor_id
+  let vendor_id = req.body.vendorId
   let x = req.body.menuList
   let menu = []
   for(var i in x){
@@ -228,6 +228,21 @@ app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
   }else{
     res.status(404).send({foodId : y})
   }
+})
+
+app.put('/v1/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  var currentDate = new Date()
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id,order_status,currentDate)
+    // firebase integration maybe use set timeout
+  }
+
+  if(order_status == "CANCELLED"){
+    //firebase integration
+  }
+  
 })
 
 app.get('/v1/sales-record/vendor/:vendorId/sales', async (req,res) => { //wip
