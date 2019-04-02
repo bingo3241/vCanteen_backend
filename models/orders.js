@@ -49,49 +49,49 @@ async function updateOrderStatusToCollected(id) {
 }
 
 async function getOrderStatus(id) {
-  let orderStatus = await db.query("select * from Orders where order_id = ?", [id])
-  return orderStatus.length == 1 ? orderStatus[0] : null
+    let orderStatus = await db.query("select * from Orders where order_id = ?", [id])
+    return orderStatus.length == 1 ? orderStatus[0] : null
 }
 
 async function getSlotNo(id) {
-  let slotNo = await db.query("select slot_id as slotID from Is_At where order_id = ?", [id])
-  return slotNo.length == 1 ? slotNo[0] : null
+    let slotNo = await db.query("select slot_id as slotID from Is_At where order_id = ?", [id])
+    return slotNo.length == 1 ? slotNo[0] : null
 }
 
 async function getVendorMenu(vid) {
-  let minBasePrice = 999999999
-  let minMainPrice = 999999999
-  let minCombinationPrice = 0
-  let availist = []
-  let soldoutlist = []
-  let hasCombination = true
-  let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
-  let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-  let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
-  menulist.forEach(menu => {
-      if (menu.food_type === "COMBINATION_BASE") {
-          if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
-      }
-      if (menu.food_type === "COMBINATION_MAIN") {
-          if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
-      }
-  })
-  foodlist.forEach(food => {
-      const {food_id,food_name,food_price} = food
-      if (food.food_status == "AVAILABLE") {
+    let minBasePrice = 999999999
+    let minMainPrice = 999999999
+    let minCombinationPrice = 0
+    let availist = []
+    let soldoutlist = []
+    let hasCombination = true
+    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
+    let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
+    let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
+    menulist.forEach(menu => {
+        if (menu.food_type === "COMBINATION_BASE") {
+            if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
+        }
+        if (menu.food_type === "COMBINATION_MAIN") {
+            if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
+        }
+    })
+    foodlist.forEach(food => {
+        const {food_id,food_name,food_price} = food
+        if (food.food_status == "AVAILABLE") {
           availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
-      }
-      if (food.food_status == "SOLD_OUT") {
+        }
+        if (food.food_status == "SOLD_OUT") {
           soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
-      }
-  })    
-  minCombinationPrice = minBasePrice+minMainPrice
-  if (minBasePrice == 999999999 || minMainPrice == 999999999) {
-      minCombinationPrice = null
-      hasCombination = false
-  }
-  let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
-  return response
+        }
+    })    
+    minCombinationPrice = minBasePrice+minMainPrice
+    if (minBasePrice == 999999999 || minMainPrice == 999999999) {
+        minCombinationPrice = null
+        hasCombination = false
+    }
+    let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
+    return response
 }
 
 async function getFoodAndExtra(vid, fid) {
