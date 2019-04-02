@@ -53,7 +53,7 @@ async function updateOrderStatus(order_status,order_id) {
 
 async function getCombMenu(vendor_id){
     try{
-        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImageUrl,food_status AS foodStatus,food_type AS foodType FROM Food WHERE vendor_id = ? AND (food_type = "COMBINATION_MAIN" OR food_type = "COMBINATION_BASE") ', [vendor_id])
+        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImage,food_status AS foodStatus,food_type AS foodType FROM Food WHERE vendor_id = ? AND (food_type = "COMBINATION_MAIN" OR food_type = "COMBINATION_BASE") ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -63,7 +63,7 @@ async function getCombMenu(vendor_id){
 
 async function getAlaMenu(vendor_id){
     try{
-        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImageUrl,food_status AS foodStatus,food_type AS foodType FROM Food WHERE vendor_id = ? AND food_type = "ALACARTE" ', [vendor_id])
+        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImage,food_status AS foodStatus,food_type AS foodType FROM Food WHERE vendor_id = ? AND food_type = "ALACARTE" ', [vendor_id])
         return result
     } 
     catch(err) {

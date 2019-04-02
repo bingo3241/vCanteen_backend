@@ -236,7 +236,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   var currentDate = new Date()
   if(order_status == "DONE"){
     let x = await vendorsModel.assignSlot(order_id,order_status,currentDate)
-    // firebase integration maybe use set timeout
+    // firebase integration ,might use set timeout
   }
 
   if(order_status == "CANCELLED"){
