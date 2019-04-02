@@ -53,7 +53,7 @@ async function updateOrderStatus(order_status,order_id) {
 
 async function getCombMenu(vendor_id){
     try{
-        let result = await db.query('SELECT food_id,food_name,food_price,food_image,food_status FROM Food WHERE vendor_id = ? AND (food_type = "COMBINATION_MAIN" OR food_type = "COMBINATION_BASE") ', [vendor_id])
+        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImageUrl,food_status AS foodStatus FROM Food WHERE vendor_id = ? AND (food_type = "COMBINATION_MAIN" OR food_type = "COMBINATION_BASE") ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -63,7 +63,7 @@ async function getCombMenu(vendor_id){
 
 async function getAlaMenu(vendor_id){
     try{
-        let result = await db.query('SELECT food_id,food_name,food_price,food_image,food_status FROM Food WHERE vendor_id = ? AND food_type = "ALACARTE" ', [vendor_id])
+        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_image AS foodImageUrl,food_status AS foodStatus FROM Food WHERE vendor_id = ? AND food_type = "ALACARTE" ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -73,7 +73,7 @@ async function getAlaMenu(vendor_id){
 
 async function getOrder(vendor_id){
     try{
-        let result = await db.query('SELECT created_at,order_name,order_name_extra FROM Orders WHERE vendor_id = ? AND order_status = "COOKING" ', [vendor_id])
+        let result = await db.query('SELECT created_at AS timestamp,order_name AS orderName,order_name_extra AS orderNameExtra FROM Orders WHERE vendor_id = ? AND order_status = "COOKING" ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -83,7 +83,7 @@ async function getOrder(vendor_id){
 
 async function getVendorInfo(vendor_id){
     try{
-        let result = await db.query('SELECT restaurant_name,vendor_status,email,vendor_image,account_type FROM Vendors WHERE vendor_id = ? ', [vendor_id])
+        let result = await db.query('SELECT restaurant_name AS vendorName,vendor_status AS vendorStatus,email AS vendorEmail,vendor_image AS vendorImage,account_type AS accountType FROM Vendors WHERE vendor_id = ? ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -93,7 +93,7 @@ async function getVendorInfo(vendor_id){
 
 async function getProvider(vendor_id){
     try{
-        let result = await db.query('SELECT service_provider FROM Vendor_Links NATURAL JOIN VendorMoneyAccounts WHERE vendor_id = ? ', [vendor_id])
+        let result = await db.query('SELECT service_provider AS account FROM Vendor_Links NATURAL JOIN VendorMoneyAccounts WHERE vendor_id = ? ', [vendor_id])
         return result
     } 
     catch(err) {
@@ -133,9 +133,20 @@ async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,fo
     }
 }
 
+async function getFoodId(vendor_id,food_name,food_price,food_status,food_type,food_image){
+    try{
+        let result = await db.query('SELECT food_id FROM Food WHERE vendor_id=? AND food_name=? AND food_price=? AND food_status=? AND food_type=? AND food_image=?', 
+        [vendor_id,food_name,food_price,food_status,food_type,food_image])
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
 async function getMenu(vendor_id,food_id){
     try{
-        let result = await db.query('SELECT food_id,food_name,food_price,food_status,food_image FROM Food WHERE vendor_id=? AND food_id=?' , [vendor_id,food_id])
+        let result = await db.query('SELECT food_id AS foodId,food_name AS foodName,food_price AS price,food_status AS foodStatus,food_image AS foodImage FROM Food WHERE vendor_id=? AND food_id=?' , [vendor_id,food_id])
         return result
     } 
     catch(err) {
@@ -182,15 +193,6 @@ async function editMenuStatus(vendor_id,menu){
     }
 }
 
-async function changePasswords(pwd,vendor_id) {
-    try {
-        let result = await db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [pwd,vendor_id])
-        return [null, result]
-    } catch (err) {
-        return [err, null]
-    }
-}
-
 module.exports = {
     getAll,
     get,
@@ -210,6 +212,5 @@ module.exports = {
      getMenu,
      delMenu,
      updateVendorStatus,
-     editMenuStatus,
-     changePasswords
+     editMenuStatus
 }

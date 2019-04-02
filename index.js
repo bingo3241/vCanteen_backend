@@ -156,7 +156,7 @@ app.get('/v1/vendor-main/:vendorId/orders' , async(req,res) => {
 app.get('/v1/settings/:vendorId/info' , async(req,res) => {
   let vendor_id = req.params.vendorId
   //console.log(vendor_id)
-  let result = { vendorinfo : await vendorsModel.getVendorInfo(vendor_id) , vendorPaymentMethod : await vendorsModel.getProvider(vendor_id)}
+  let result = { vendorInfo : await vendorsModel.getVendorInfo(vendor_id) , vendorPaymentMethod : await vendorsModel.getProvider(vendor_id)}
   if (result.vendorinfo == false) {
     res.status(404).send()
   }else {
