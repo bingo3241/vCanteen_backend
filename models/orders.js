@@ -134,45 +134,22 @@ async function postNewOrder(orders, customerId, vendorId, createdAt, customerMon
   let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
   let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
   let result = []
-  orders.forEach(async order => {
-      let names = []
-      let extraNames = []
-      let fids = []
-      let orderprice = 0
-      let orderName = ""
-      let orderNameExtra = ""
-      order.forEach(food => {
-          fids.push(food.foodId)
-          orderprice += food.foodPrice
-          if (food.foodType != "EXTRA") {
-          names.push(food.foodName)
-          } else {
-          extraNames.push(food.foodName)
-      }
-      })
-      if (names[0]!= null) {
-          orderName = names.reduce((a,b) => {
-              if (a > b) return `${b}, ${a}`
-              else return `${a}, ${b}`
-          })
-      }
-      if (extraNames[0] != null) {
-          orderNameExtra =  extraNames.reduce((a,b) => {
-              if (a > b) return `${b}, ${a}`
-              else return `${a}, ${b}`
-          })
-      }
-      if (orderName == "") orderName = null
-      if (orderNameExtra == "") orderNameExtra = null
-      let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderprice, customerId, createdAt, vendorId, transacResult.insertId])
-      let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
-      fids.forEach(async fid => {
-          let insertContain = await db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
-      })
-      result.push(returnres)
+  await orderList.forEach(async order => {
+        let fids = []
+        let {orderPrice, orderName, orderNameExtra, foodList} = order
+        foodList.forEach(food => {
+            fids.push(food.foodId)
+        })
+        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, createdAt, vendorId, transacResult.insertId])
+        let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
+        await result.push(returnres)
+        console.log(result)
+        fids.forEach(fid => {
+            let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
+        })
+      
   })
   return result
-}  
 
 
 module.exports = {
