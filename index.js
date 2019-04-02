@@ -346,10 +346,9 @@ app.get("/v1/orders/:vid/combination", async (req, res) => {
   res.json(result)
 })
 
-app.put("/v1/orders/:oid/status-change", async (req, res) => {
+app.put("/v1/orders/:oid/status/collected", async (req, res) => {
   let oid = req.params.oid
-  let status = req.body.orderStatus
-  let [err, result] = await ordersModel.updateOrderStatus(oid, status)
+  let [err, result] = await ordersModel.updateOrderStatusToCollected(oid)
 // if (err == "order_status_not_exist") {
 //   res.status(400).json({
 //     message: err
@@ -365,16 +364,23 @@ app.put("/v1/orders/:oid/status-change", async (req, res) => {
 })
   
 app.post("/v1/orders/new", async (req, res) => {
-  let {orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
+  let {orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
   //let foods = req.body.foods
-  let response = await ordersModel.postNewOrder(orders, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
-  res.json(response)
+  let response = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  if(response == []) res.status(200).send
+  else res.status(400).send
 
 })
 
 app.get("/v1/customer-main/main", async (req, res) => {
   let result = await customersModel.getApprovedVendor()
   res.json(result)
+})
+
+app.get("/v1/orders/:cid/payment-method", async (req, res) => {
+  let cid = req.params.cid
+  let result = await ordersModel.getPaymentMethod(cid)
+  res.json(result) 
 })
   
 let port = process.env.PORT;
