@@ -75,6 +75,22 @@ app.put('/v1/user-authentication/customer/password/change' , async (req,res) => 
       }
 })
 
+app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
+  var email = req.body.email;
+  if(await customersModel.isInDatabase(email)) {
+      var newpassword = passwordModule.generate();
+      console.log('New password generated')
+      var hash = passwordModule.hash(newpassword);
+      console.log('Hash: '+hash)
+      await vendorsModel.updatePassword(email,hash);
+      console.log('Password has been updated')
+      emailModule.mailto(newpassword,email);
+      res.status(200).send('Success');
+  } else {
+      res.status(404).send('Error!');
+  }
+})
+
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
