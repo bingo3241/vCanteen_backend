@@ -150,7 +150,7 @@ async function postNewOrder(orders, customerId, vendorId, createdAt, customerMon
       
   })
   return result
-
+}
 
 module.exports = {
   // getSaleRecord,
