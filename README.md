@@ -17,14 +17,3 @@ Backend of vCanteen application which will be deployed to heroku.
 11. Smatchaya 	Wattanachindaporn 	5931366021 (Database team)
 12. Akekamon 	Boonsith 	        5931393021 (AI team)
 
-
-### To make the server online several application is required:
-1. Visual Studio Code
-2. Node.js
-
-### Once both application is installed process the following instructions:
-1. Open Escape_Plan_js folder in Visual Studio Code
-2. access the terminal and type "npm install" to install node module
-3. To start the server, type "node index" or "npm start"
-4. To shut down server press Ctrl+C
-5. Enjoy!
