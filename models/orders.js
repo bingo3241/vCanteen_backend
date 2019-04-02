@@ -123,15 +123,16 @@ async function getBaseMainExtraList(vid) {
 }
 
 async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
-  let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
-  let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
-  custAcc[0].balance -= totalPrice
-  vendorAcc[0].balance += totalPrice
-  let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
-  let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
-  let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
-  let result = []
-  await orderList.forEach(async order => {
+    try {
+    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
+    let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
+    custAcc[0].balance -= totalPrice
+    vendorAcc[0].balance += totalPrice
+    let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
+    let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
+    let result = []
+    await orderList.forEach(async order => {
         let fids = []
         let {orderPrice, orderName, orderNameExtra, foodList} = order
         foodList.forEach(food => {
@@ -145,8 +146,11 @@ async function postNewOrder(orderList, customerId, vendorId, createdAt, customer
             let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
       
-  })
-  return result
+    })
+    return [null, result]
+    } catch (err){
+        return [err, null]
+    }
 }
 
 async function getPaymentMethod (cid) {
