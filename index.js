@@ -230,6 +230,21 @@ app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
   }
 })
 
+app.put('/v1/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  var currentDate = new Date()
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id,order_status,currentDate)
+    // firebase integration ,might use set timeout
+  }
+
+  if(order_status == "CANCELLED"){
+    //firebase integration
+  }
+  
+})
+
 app.get('/v1/sales-record/vendor/:vendorId/sales', async (req,res) => { //wip
     var vendorId = req.params.vendorId;
     res.status(200).json(await ordersModel.getSaleRecords(vendorId))
