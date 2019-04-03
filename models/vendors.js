@@ -36,8 +36,8 @@ async function NormalAuth(email, password) {
 }
 
  async function updatePassword(email, passwd) {
-    var vendor_id = await getCustomerID(email);
-    console.log('VendorID: '+customer_id)
+    var vendor_id = await getVendorID(email);
+    console.log('VendorID: '+vendor_id)
     return db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [passwd, vendor_id]);
 }
 
