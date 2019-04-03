@@ -46,11 +46,9 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
 
 app.put('/v1/user-authentication/customer/password/change' , async (req,res) => {
     var email = req.body.email;
-    var customer_id = await customersModel.getCustomerID(email)
-    console.log(customer_id);
     var pwd = req.body.passwordNew;
     console.log(pwd);
-    let [err, result] = await customersModel.changePasswords(pwd,customer_id)
+    let [err, result] = await customersModel.updatePassword(email,pwd)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
@@ -78,17 +76,16 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
-  var vendor_id = await vendorsModel.getVendorID(email);
-    var pwd = req.body.passwordNew;
-    console.log(pwd);
-    let [err, result] = await vendorsModel.changePasswords(pwd,vendor_id)
-    if (err) {
-        res.status(500).json(err)
-      } else if (result.affectedRows == 0){
-        res.status(404).send()
-      }else {
-        res.status(200).send()
-      }
+  var pwd = req.body.passwordNew;
+  console.log(pwd);
+  let [err, result] = await vendorsModel.updatePassword(email, pwd)
+  if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      res.status(200).send()
+    }
 })
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
