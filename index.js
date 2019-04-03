@@ -183,9 +183,9 @@ app.get('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
   }     
 })
 
-app.delete('/v1/menu-management/vendorId/menu/foodId' , async (req,res) => {
-  let vendor_id = req.body.vendorId
-  let food_id = req.body.foodId
+app.delete('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
+  let vendor_id = req.params.vendorId
+  let food_id = req.params.foodId
   let [err, result] = await vendorsModel.delMenu(vendor_id,food_id)
   if (err) {
     res.status(500).json(err)
