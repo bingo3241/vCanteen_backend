@@ -79,7 +79,6 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
-    console.log(customer_id);
     var pwd = req.body.passwordNew;
     console.log(pwd);
     let [err, result] = await vendorsModel.changePasswords(pwd,vendor_id)
