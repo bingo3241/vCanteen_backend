@@ -37,6 +37,7 @@ async function NormalAuth(email, password) {
 
  async function updatePassword(email, passwd) {
     var vendor_id = await getVendorID(email);
+    vendor_id = Number(vendor_id)
     console.log('VendorID: '+vendor_id)
     return db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [passwd, vendor_id]);
 }
@@ -205,17 +206,17 @@ module.exports = {
     NormalAuth,
     updatePassword,
     updateOrderStatus,
-     getCombMenu,
-     getAlaMenu,
-     getOrder,
-     getVendorInfo,
-     getProvider,
-     editMenu,
-     createMenu,
-     getFoodId,
-     getMenu,
-     delMenu,
-     updateVendorStatus,
-     editMenuStatus,
-     assignSlot
+    getCombMenu,
+    getAlaMenu,
+    getOrder,
+    getVendorInfo,
+    getProvider,
+    editMenu,
+    createMenu,
+    getFoodId,
+    getMenu,
+    delMenu,
+    updateVendorStatus,
+    editMenuStatus,
+    assignSlot
 }
