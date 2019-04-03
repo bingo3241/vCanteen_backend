@@ -69,8 +69,9 @@ app.put('/v1/user-authentication/customer/password/change' , async (req,res) => 
 })
 
 app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
+  console.log(req.body)
   var email = req.body.email;
-  if(await customersModel.isInDatabase(email)) {
+  if(await vendorsModel.isInDatabase(email)) {
       var vendor_id = await vendorsModel.getVendorID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
