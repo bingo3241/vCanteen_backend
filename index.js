@@ -31,11 +31,19 @@ app.get('/', function(req, res){
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
     if(await customersModel.isInDatabase(email)) {
+        var customer_id = await customersModel.getCustomerID(email)
         var newpassword = passwordModule.generate();
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
         console.log('Hash: '+hash)
-        await customersModel.updatePassword(email,hash);
+        let [err, result] = await customersModel.changePasswords(hash, customer_id);
+        if (err) {
+          res.status(500).json(err)
+        } else if (result.affectedRows == 0){
+          res.status(404).send()
+        }else {
+          res.status(200).send('Password has been updated')
+        }
         console.log('Password has been updated')
         emailModule.mailto(newpassword,email);
         res.status(200).json('Success');
@@ -46,26 +54,36 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
 
 app.put('/v1/user-authentication/customer/password/change' , async (req,res) => {
     var email = req.body.email;
+    var customer_id = await customersModel.getCustomerID(email)
+    console.log(customer_id);
     var pwd = req.body.passwordNew;
     console.log(pwd);
-    let [err, result] = await customersModel.updatePassword(email,pwd)
+    let [err, result] = await customersModel.changePasswords(pwd,customer_id)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        res.status(200).send()
+        res.status(200).send('Password is changed')
       }
 })
 
 app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
   var email = req.body.email;
   if(await customersModel.isInDatabase(email)) {
+      var vendor_id = await vendorsModel.getVendorID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
       console.log('Hash: '+hash)
-      await vendorsModel.updatePassword(email,hash);
+      let [err, result] = await vendorsModel.changePasswords(hash, vendor_id);
+      if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send('Password has been updated')
+      }
       console.log('Password has been updated')
       emailModule.mailto(newpassword,email);
       res.status(200).send('Success');
@@ -76,16 +94,17 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
-  var pwd = req.body.passwordNew;
-  console.log(pwd);
-  let [err, result] = await vendorsModel.updatePassword(email, pwd)
-  if (err) {
-      res.status(500).json(err)
-    } else if (result.affectedRows == 0){
-      res.status(404).send()
-    }else {
-      res.status(200).send()
-    }
+  var vendor_id = await vendorsModel.getVendorID(email);
+    var pwd = req.body.passwordNew;
+    console.log(pwd);
+    let [err, result] = await vendorsModel.changePasswords(pwd, vendor_id)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send('Password is changed')
+      }
 })
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
