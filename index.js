@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
+const db = require('./db/db')
 
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
@@ -393,9 +394,56 @@ app.get("/v1/orders/:cid/payment-method", async (req, res) => {
   res.json(result)
 })
 app.post("/testfirebase", async (req, res) => {
-  let {test, testmsg, token} = req.body
+  let {test, testmsg, cid} = req.body
+  let result = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = result[0].token_firebase
   x = await sendToFirebase(test, testmsg, token)
   res.status(200).send()
+})
+
+
+app.put('/v1/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  var currentDate = new Date()
+  let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
+  let cid = cidA[0].customer_id
+  let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = tokenA[0].token_firebase
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id, currentDate)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    setTimeout(async () => {
+      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
+    },5000)
+    setTimeout(async (order_id) => {
+      if(await db.query("select order_status from Orders where order_id = ?", [order_id]) != "COLLECTED"){
+        x = sendToFirebase("15min leaw ai sus", "time out", token)
+      } 
+    },10000)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      } 
+  }
+
+  if(order_status == "CANCELLED"){
+    let x = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+    let token = x[0].token_firebase
+    x = sendToFirebase("noti", "order cancelled", token)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
+    if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      res.status(200).send()
+    } 
+  }
+  
 })
 
 function sendToFirebase(title, body, token) {
