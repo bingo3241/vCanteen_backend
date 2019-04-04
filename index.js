@@ -100,6 +100,15 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
   }
 })
 
+app.put('/v1/user-authentication/vendor/verify/email', async (req, res) => {
+  var email = req.body.email
+  if(await vendorsModel.isInDatabase(email) == true) {
+    res.status(200).send()
+  }else {
+    res.status(404).send()
+  }
+})
+
 app.put('/v1/vendor-main/orderId/status', async (req,res) => {
     let order_id = req.body.orderId;
     console.log(order_id);
