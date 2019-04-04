@@ -83,11 +83,10 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        res.status(200).send('Password has been updated')
+        console.log('Password has been updated')
+        emailModule.mailto(newpassword,email);
+        res.status(200).send('Success');
       }
-      console.log('Password has been updated')
-      emailModule.mailto(newpassword,email);
-      res.status(200).send('Success');
   } else {
       res.status(404).send('Error!');
   }
