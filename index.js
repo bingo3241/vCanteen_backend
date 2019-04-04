@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
+const db = require('./db/db')
 
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
@@ -393,7 +394,10 @@ app.get("/v1/orders/:cid/payment-method", async (req, res) => {
   res.json(result)
 })
 app.post("/testfirebase", async (req, res) => {
-  let {test, testmsg, token} = req.body
+  let {test, testmsg, cid} = req.body
+  let result = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  //console.log(result)
+  let token = result[0].token_firebase
   x = await sendToFirebase(test, testmsg, token)
   res.status(200).send()
 })
