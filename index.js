@@ -1,13 +1,15 @@
 var app = require('express')();
 var http = require('http').Server(app);
 
+
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
+
 
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
@@ -83,10 +85,11 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        console.log('Password has been updated')
-        emailModule.mailto(newpassword,email);
-        res.status(200).send('Success');
+        res.status(200).send('Password has been updated')
       }
+      console.log('Password has been updated')
+      emailModule.mailto(newpassword,email);
+      res.status(200).send('Success');
   } else {
       res.status(404).send('Error!');
   }
@@ -326,27 +329,8 @@ app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
 })
 
 app.put('/v1/vendor-main/order/status' , async(req,res) => {
-  let order_id = req.body.orderId
-  let order_status = req.body.orderStatus
-  var currentDate = new Date()
-  if(order_status == "DONE"){
-    let x = await vendorsModel.assignSlot(order_id,order_status,currentDate)
-    let [err, result] = await vendorsModel.updateOrderStatus(order_status,order_id)
-    if (err) {
-        res.status(500).json(err)
-      } else if (result.affectedRows == 0){
-        res.status(404).send()
-      }else {
-        res.status(200).send()
-      }
-    // firebase integration ,might use set timeout
-  }
-
-  if(order_status == "CANCELLED"){
-    //firebase integration
-  }
-  
 })
+
 
 app.get('/v1/sales-record/vendor/:vendorId/sales', async (req,res) => { //wip
     var vendorId = req.params.vendorId;
@@ -432,6 +416,8 @@ app.get("/v1/customer-main/main", async (req, res) => {
   let result = await customersModel.getApprovedVendor()
   res.json(result)
 })
+
+
   
 let port = process.env.PORT;
 if (port == null || port == "") {
