@@ -12,7 +12,6 @@ const vendorsModel = require('./models/vendors')
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
 
-const jwt = require('./library/jwt');
 
 const verifyJWT= (req, res, next) => {
     var token = req.body.token
@@ -31,11 +30,19 @@ app.get('/', function(req, res){
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
     var email = req.body.email;
     if(await customersModel.isInDatabase(email)) {
+        var customer_id = await customersModel.getCustomerID(email)
         var newpassword = passwordModule.generate();
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
         console.log('Hash: '+hash)
-        await customersModel.updatePassword(email,hash);
+        let [err, result] = await customersModel.changePasswords(hash, customer_id);
+        if (err) {
+          res.status(500).json(err)
+        } else if (result.affectedRows == 0){
+          res.status(404).send()
+        }else {
+          res.status(200).send('Password has been updated')
+        }
         console.log('Password has been updated')
         emailModule.mailto(newpassword,email);
         res.status(200).json('Success');
@@ -56,18 +63,27 @@ app.put('/v1/user-authentication/customer/password/change' , async (req,res) => 
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        res.status(200).send()
+        res.status(200).send('Password is changed')
       }
 })
 
 app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
+  console.log(req.body)
   var email = req.body.email;
-  if(await customersModel.isInDatabase(email)) {
+  if(await vendorsModel.isInDatabase(email)) {
+      var vendor_id = await vendorsModel.getVendorID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
       console.log('Hash: '+hash)
-      await vendorsModel.updatePassword(email,hash);
+      let [err, result] = await vendorsModel.changePasswords(hash, vendor_id);
+      if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send('Password has been updated')
+      }
       console.log('Password has been updated')
       emailModule.mailto(newpassword,email);
       res.status(200).send('Success');
@@ -79,16 +95,15 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
-    console.log(customer_id);
     var pwd = req.body.passwordNew;
     console.log(pwd);
-    let [err, result] = await vendorsModel.changePasswords(pwd,vendor_id)
+    let [err, result] = await vendorsModel.changePasswords(pwd, vendor_id)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        res.status(200).send()
+        res.status(200).send('Password is changed')
       }
 })
 
@@ -98,6 +113,86 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
     res.status(200).send()
   }else {
     res.status(404).send()
+  }
+})
+
+app.put('/v1/user-authentication/vendor/verify/email', async (req, res) => {
+  var email = req.body.email
+  if(await vendorsModel.isInDatabase(email) == true) {
+    res.status(200).send()
+  }else {
+    res.status(404).send()
+  }
+})
+app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
+  var output = new Object()
+  if(req.body.account_type == 'FACEBOOK') {
+      var email = req.body.email
+      console.log('email: '+email)
+      if(await customersModel.isInDatabase(email)) {
+          output.status = 'success'
+          output.customer_id = await customersModel.getCustomerID(email)
+          output.token = jwt.sign(email);
+          res.status(200).json(output)
+      } else {
+          var first_name = req.body.first_name
+          var last_name = req.body.last_name
+          var url = req.body.profile_url
+          await customersModel.insertFacebook(first_name,last_name,email,url)
+          output.status = 'success'
+          output.customer_id = await customersModel.getCustomerID(email)
+          output.token = jwt.sign(email);
+          res.status(200).json(output)
+
+      }
+  } else if(req.body.account_type == 'NORMAL') {
+      var email = req.body.email
+      var password = req.body.password;
+      if(await customersModel.NormalAuth(email, password)) {
+          var output = new Object()
+          output.status = 'success'
+          output.customer_id = await customersModel.getCustomerID(email)
+          output.token = jwt.sign(email)
+          res.status(200).json(output)
+      } else {
+          res.status(404).json({status: 'error'})
+      }
+      console.log('email: '+email)
+  }
+})
+
+app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
+  var email = req.body.email
+  var password = req.body.password;
+  if(await vendorsModel.NormalAuth(email, password)) {
+      var result = new Object()
+      result.status = 'success'
+      result.vendor_id = await vendorsModel.getVendorID(email)
+      result.vendorToken = jwt.sign(email);
+      res.status(200).json(result)
+  } else {
+      res.status(404).json({status: 'error'})
+  }
+  console.log('email: '+email)
+})
+
+app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
+  var token = req.body.token
+  if(jwt.verify(token) == false) {
+      console.log("Verify failed")
+      res.json({expired: true})
+  } else {
+      res.json({expired: jwt.isExpired(token)})
+  }
+})
+
+app.post('/v1/user-authentication/vendor/verify/token', async (req,res) => {
+  var token = req.body.token
+  if(jwt.verify(token) == false) {
+      console.log("Verify failed")
+      res.json({expired: true})
+  } else {
+      res.json({expired: jwt.isExpired(token)})
   }
 })
 
@@ -278,67 +373,6 @@ app.post('/hashtest', async (req, res) => {
     res.json(passwordModule.hash(a));
 })
 
-app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
-    var output = new Object()
-    if(req.body.account_type == 'FACEBOOK') {
-        var email = req.body.email
-        console.log('email: '+email)
-        if(await customersModel.isInDatabase(email)) {
-            output.status = 'success'
-            output.customer_id = await customersModel.getCustomerID(email)
-            output.token = jwt.sign(email);
-            res.status(200).json(output)
-        } else {
-            var first_name = req.body.first_name
-            var last_name = req.body.last_name
-            var url = req.body.profile_url
-            await customersModel.insertFacebook(first_name,last_name,email,url)
-            output.status = 'success'
-            output.customer_id = await customersModel.getCustomerID(email)
-            output.token = jwt.sign(email);
-            res.status(200).json(output)
-
-        }
-    } else if(req.body.account_type == 'NORMAL') {
-        var email = req.body.email
-        var password = req.body.password;
-        if(await customersModel.NormalAuth(email, password)) {
-            var output = new Object()
-            output.status = 'success'
-            output.customer_id = await customersModel.getCustomerID(email)
-            output.token = jwt.sign(email)
-            res.status(200).json(output)
-        } else {
-            res.status(404).json({status: 'error'})
-        }
-        console.log('email: '+email)
-    }
-})
-
-app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
-    var email = req.body.email
-    var password = req.body.password;
-    if(await vendorsModel.NormalAuth(email, password)) {
-        var result = new Object()
-        result.status = 'success'
-        result.vendor_id = await vendorsModel.getVendorID(email)
-        result.vendorToken = jwt.sign(email);
-        res.status(200).json(result)
-    } else {
-        res.status(404).json({status: 'error'})
-    }
-    console.log('email: '+email)
-})
-
-app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
-    var token = req.body.token
-    if(jwt.verify(token) == false) {
-        console.log("Verify failed")
-        res.json({expired: true})
-    } else {
-        res.json({expired: jwt.isExpired(token)})
-    }
-})
 
 app.get("/v1/orders/:id/slot", async (req, res) => {                 
     let id = req.params.id
@@ -348,7 +382,7 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
     } else {
       res.status(404).send()
     }
-  })
+})
   
 app.get("/v1/orders/:vid/menu", async (req, res) => {                     
   let vid = req.params.vid

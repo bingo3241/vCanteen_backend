@@ -35,10 +35,14 @@ async function NormalAuth(email, password) {
     }
 }
 
- async function updatePassword(email, passwd) {
-    var vendor_id = await getVendorID(email);
-    console.log('VendorID: '+vendor_id)
-    return db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [passwd, vendor_id]);
+async function changePasswords(pwd,vendor_id) {
+    try {
+        let result = await db.query('UPDATE Vendors SET passwd = ? WHERE vendor_id = ?', [pwd,vendor_id])
+        return [null, result]
+    }
+    catch (err) {
+        return [err, null]
+    }
 }
 
 async function updateOrderStatus(order_status,order_id) {
@@ -182,7 +186,7 @@ async function editMenuStatus(vendor_id,menu){
         return [-1,err]
     }
 }
-async function assignSlot(order_id,order_status,currentDate){
+async function assignSlot(order_id,currentDate){
     var x = await db.query('SELECT slot_id FROM Is_At')
     var y = []
     var z
@@ -203,19 +207,19 @@ module.exports = {
     getVendorID,
     isInDatabase,
     NormalAuth,
-    updatePassword,
     updateOrderStatus,
-     getCombMenu,
-     getAlaMenu,
-     getOrder,
-     getVendorInfo,
-     getProvider,
-     editMenu,
-     createMenu,
-     getFoodId,
-     getMenu,
-     delMenu,
-     updateVendorStatus,
-     editMenuStatus,
-     assignSlot
+    getCombMenu,
+    getAlaMenu,
+    getOrder,
+    getVendorInfo,
+    getProvider,
+    editMenu,
+    createMenu,
+    getFoodId,
+    getMenu,
+    delMenu,
+    updateVendorStatus,
+    editMenuStatus,
+    assignSlot,
+    changePasswords
 }

@@ -35,12 +35,6 @@ async function NormalAuth(email, password) {
     }
 }
 
- async function updatePassword(email, passwd) {
-    var customer_id = await getCustomerID(email);
-    console.log('CustomerID: '+customer_id)
-    return db.query('UPDATE Customers SET passwd = ? WHERE customer_id = ?', [passwd, customer_id]);
-
-}
 
 async function insertFacebook(first_name, last_name, email, profile_url) {
     return await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', firstname = ?, lastname = ?, customer_image = ?, email = ? ", [first_name, last_name, profile_url, email])
@@ -67,7 +61,6 @@ module.exports = {
     getCustomerID,
     isInDatabase,
     NormalAuth,
-    updatePassword,
     insertFacebook,
     changePasswords,
     getApprovedVendor
