@@ -332,6 +332,14 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   var currentDate = new Date()
   if(order_status == "DONE"){
     let x = await vendorsModel.assignSlot(order_id,order_status,currentDate)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status,order_id)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      }
     // firebase integration ,might use set timeout
   }
 
