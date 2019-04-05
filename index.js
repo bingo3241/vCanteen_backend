@@ -396,7 +396,6 @@ app.get("/v1/orders/:cid/payment-method", async (req, res) => {
 app.post("/testfirebase", async (req, res) => {
   let {test, testmsg, cid} = req.body
   let result = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
-  //console.log(result)
   let token = result[0].token_firebase
   x = await sendToFirebase(test, testmsg, token)
   res.status(200).send()
