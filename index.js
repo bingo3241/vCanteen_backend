@@ -111,6 +111,7 @@ app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
   var uid = await firebase.getUID(email);
+  console.log('UID: '+uid)
   var pwd = req.body.passwordNew;
   console.log(pwd);
   let [err, result] = await vendorsModel.changePasswords(pwd, vendor_id)

@@ -6,7 +6,7 @@ admin.initializeApp({
         "private_key": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         "client_email": process.env.FIREBASE_CLIENT_EMAIL
    }),
-    databaseURL: FIREBASE_DATABASE_URL
+    databaseURL: process.env.FIREBASE_DATABASE_URL
 })
 
 async function getUID(email) {
