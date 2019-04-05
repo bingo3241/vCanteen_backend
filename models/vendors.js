@@ -186,7 +186,7 @@ async function editMenuStatus(vendor_id,menu){
         return [-1,err]
     }
 }
-async function assignSlot(order_id,order_status,currentDate){
+async function assignSlot(order_id,currentDate){
     var x = await db.query('SELECT slot_id FROM Is_At')
     var y = []
     var z
