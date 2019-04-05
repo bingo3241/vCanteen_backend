@@ -24,6 +24,7 @@ const db = require('./db/db')
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
 
+const jwt = require('./library/jwt');
 
 const verifyJWT = (req, res, next) => {
   var token = req.body.token
@@ -470,15 +471,19 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = sendToFirebase("10min leaw ai sus", "collect pls", token)
-    },5000)
+    },15000)
     setTimeout(async () => {
       let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
-      if(orderStatus != "COLLECTED"){
+      console.log(orderStatus)
+      let status = orderStatus[0].order_status
+      console.log(status)
+      console.log(status == "COLLECTED")
+      if(status != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = sendToFirebase("15min leaw ai sus", "time out", token)
         
       } 
-    },10000)
+    },30000)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
