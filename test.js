@@ -1,7 +1,16 @@
-const ordersModel = require('./models/orders')
+const firebase = require('./db/firebase')
 
-async function test() {
-    console.log(await ordersModel.getSaleRecord(1))
+var email = 'bingo6689@gmail.com'
+async function getUID(email) {
+    var uid = await firebase.getUID(email)
+    console.log('UID: '+uid)
 }
 
-test()
+async function changeEmail(email, pwd) {
+    var uid = await firebase.getUID(email);
+    await firebase.updatePassword(uid, pwd)
+}
+
+getUID('bingo6689@gmail.com')
+
+changeEmail(email, 'test1234')
