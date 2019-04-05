@@ -1,6 +1,15 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 
+const functions = require('firebase-functions');
+
+var { google } = require('googleapis');
+var MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
+var SCOPES = [MESSAGING_SCOPE];
+
+var router = express.Router();
+var request = require('request');
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -9,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
+const db = require('./db/db')
 
 
 const passwordModule = require('./helpers/password');
@@ -16,18 +26,18 @@ const emailModule = require('./helpers/email');
 
 const jwt = require('./library/jwt');
 
-const verifyJWT= (req, res, next) => {
-    var token = req.body.token
-    if(jwt.verify(token) != false) {
-        next()
-    }
-    else {
-        res.status(403).json('Token is invalid or expired')
-    }
- }
+const verifyJWT = (req, res, next) => {
+  var token = req.body.token
+  if (jwt.verify(token) != false) {
+    next()
+  }
+  else {
+    res.status(403).json('Token is invalid or expired')
+  }
+}
 
-app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
+app.get('/', function (req, res) {
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.put('/v1/user-authentication/customer/password/recover', async (req,res) => {
@@ -91,7 +101,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
       emailModule.mailto(newpassword,email);
       res.status(200).send('Success');
   } else {
-      res.status(404).send('Error!');
+    res.status(404).send('Error!');
   }
 })
 
@@ -112,9 +122,9 @@ app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
   var email = req.body.email
-  if(await customersModel.isInDatabase(email) == true) {
+  if (await customersModel.isInDatabase(email) == true) {
     res.status(200).send()
-  }else {
+  } else {
     res.status(404).send()
   }
 })
@@ -214,37 +224,37 @@ app.put('/v1/vendor-main/orderId/status', async (req,res) => {
       }
 })
 
-app.get('/v1/menu-management/:vendorId/menu/' , async (req,res) => {
-    let vendor_id = req.params.vendorId
-    const x = await vendorsModel.getCombMenu(vendor_id)
-    const y = await vendorsModel.getAlaMenu(vendor_id)
-    const result = {combinationList: await x ,alacarteList: await y }
-    if (result.combinationList == false && result.alacarteList == false) {
-      res.status(404).send()
-    }else {
-      res.json(result)
-    }     
+app.get('/v1/menu-management/:vendorId/menu/', async (req, res) => {
+  let vendor_id = req.params.vendorId
+  const x = await vendorsModel.getCombMenu(vendor_id)
+  const y = await vendorsModel.getAlaMenu(vendor_id)
+  const result = { combinationList: await x, alacarteList: await y }
+  if (result.combinationList == false && result.alacarteList == false) {
+    res.status(404).send()
+  } else {
+    res.json(result)
+  }
 })
 
-app.get('/v1/vendor-main/:vendorId/orders' , async(req,res) => {
+app.get('/v1/vendor-main/:vendorId/orders', async (req, res) => {
   let vendor_id = req.params.vendorId
-  let result = {orderList : await vendorsModel.getOrder(vendor_id)}
+  let result = { orderList: await vendorsModel.getOrder(vendor_id) }
   if (result.orderList == false) {
     res.status(404).send()
-  }else {
+  } else {
     res.json(result)
-  } 
+  }
 })
 
-app.get('/v1/settings/:vendorId/info' , async(req,res) => {
+app.get('/v1/settings/:vendorId/info', async (req, res) => {
   let vendor_id = req.params.vendorId
   //console.log(vendor_id)
-  let result = { vendorInfo : await vendorsModel.getVendorInfo(vendor_id) , vendorPaymentMethod : await vendorsModel.getProvider(vendor_id)}
+  let result = { vendorInfo: await vendorsModel.getVendorInfo(vendor_id), vendorPaymentMethod: await vendorsModel.getProvider(vendor_id) }
   if (result.vendorinfo == false) {
     res.status(404).send()
-  }else {
+  } else {
     res.json(result)
-  } 
+  }
 })
 
 app.put('/v1/menu-management/vendorId/menu/foodId' , async(req,res) => {
@@ -253,9 +263,9 @@ app.put('/v1/menu-management/vendorId/menu/foodId' , async(req,res) => {
   let [err,result] = await vendorsModel.editMenu(vendorId,foodId,foodName,price,foodStatus,foodType,foodImage)
   if (err) {
     res.status(500).json(err)
-  } else if (result.affectedRows == 0){
+  } else if (result.affectedRows == 0) {
     res.status(404).send()
-  }else {
+  } else {
     res.status(200).send()
   }
 })
@@ -264,21 +274,21 @@ app.post('/v1/menu-management/vendorId/menu', async(req,res) => {
   let {vendorId,foodName,price,foodStatus,foodType,foodImage} = req.body
   let [err,insertId] = await vendorsModel.createMenu(vendorId,foodName,price,foodStatus,foodType,foodImage)
   if (err) {
-     res.status(500).json(err)
-   } else {
-     res.status(200).json({food_id : insertId})
-   }
+    res.status(500).json(err)
+  } else {
+    res.status(200).json({ food_id: insertId })
+  }
 })
 
-app.get('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
+app.get('/v1/menu-management/:vendorId/menu/:foodId', async (req, res) => {
   let vendor_id = req.params.vendorId
   let food_id = req.params.foodId
-  const result = await vendorsModel.getMenu(vendor_id,food_id)
+  const result = await vendorsModel.getMenu(vendor_id, food_id)
   if (result == false) {
     res.status(404).send()
-  }else {
+  } else {
     res.json(result)
-  }     
+  }
 })
 
 app.delete('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
@@ -287,9 +297,9 @@ app.delete('/v1/menu-management/:vendorId/menu/:foodId' , async (req,res) => {
   let [err, result] = await vendorsModel.delMenu(vendor_id,food_id)
   if (err) {
     res.status(500).json(err)
-  } else if (result.affectedRows == 0){
+  } else if (result.affectedRows == 0) {
     res.status(404).send()
-  }else {
+  } else {
     res.status(200).send()
   }
 })
@@ -300,9 +310,9 @@ app.put('/v1/settings/vendorId/status' , async(req,res) => {
   let [err,result] = await vendorsModel.updateVendorStatus(vendor_id,vendor_status)
   if (err) {
     res.status(500).json(err)
-  } else if (result.affectedRows == 0){
+  } else if (result.affectedRows == 0) {
     res.status(404).send()
-  }else {
+  } else {
     res.status(200).send()
   }
 })
@@ -311,52 +321,66 @@ app.put('/v1/menu-management/vendorId/menu/foodId/status' , async(req,res) => {
   let vendor_id = req.body.vendorId
   let x = req.body.menuList
   let menu = []
-  for(var i in x){
+  for (var i in x) {
     menu.push(x[i])
   }
   // x.forEach(food =>{
   //   menu.push(food)
   // })
   //console.log(menu[0])
-  let y = await vendorsModel.editMenuStatus(vendor_id,menu)    
+  let y = await vendorsModel.editMenuStatus(vendor_id, menu)
   if (y == false) {
     res.status(200).send()
-  }else if (y[0] == -1) {
+  } else if (y[0] == -1) {
     res.status(500).send(y[1])
-  }else{
-    res.status(404).send({foodId : y})
+  } else {
+    res.status(404).send({ foodId: y })
   }
 })
-
-app.put('/v1/vendor-main/order/status' , async(req,res) => {
-})
-
 
 app.get('/v1/sales-record/vendor/:vendorId/sales', async (req,res) => { //wip
     var vendorId = req.params.vendorId;
     res.status(200).json(await ordersModel.getSaleRecords(vendorId))
-    
 })
 
-app.get('/v1/orders/customers/:customerId/history', async (req,res) => {
-    var customerId = req.params.customerId;
-    res.status(200).json(await ordersModel.getHistory(customerId))
+app.get('/v1/orders/customers/:customerId/history', async (req, res) => {
+  var customerId = req.params.customerId;
+  res.status(200).json(await ordersModel.getHistory(customerId))
 })
 
 app.get('/v1/orders/customers/:customerId/in-progress', async (req, res) => {
-    var customerId = req.params.customerId;
-    res.status(200).json(await ordersModel.getInProgress(customerId))
+  var customerId = req.params.customerId;
+  res.status(200).json(await ordersModel.getInProgress(customerId))
 })
 
-app.get('/customer', async (req,res) => {
-    res.json(await customersModel.getAll());
+app.get('/customer', async (req, res) => {
+  res.json(await customersModel.getAll());
 })
 
 app.post('/hashtest', async (req, res) => {
-    var a = req.body.text;
-    res.json(passwordModule.hash(a));
+  var a = req.body.text;
+  res.json(passwordModule.hash(a));
 })
 
+app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
+    var output = new Object()
+    if(req.body.account_type == 'FACEBOOK') {
+        var email = req.body.email
+        console.log('email: '+email)
+        if(await customersModel.isInDatabase(email)) {
+            output.status = 'success'
+            output.customer_id = await customersModel.getCustomerID(email)
+            output.token = jwt.sign(email);
+            res.status(200).json(output)
+        } else {
+            var first_name = req.body.first_name
+            var last_name = req.body.last_name
+            var url = req.body.profile_url
+            await customersModel.insertFacebook(first_name,last_name,email,url)
+            output.status = 'success'
+            output.customer_id = await customersModel.getCustomerID(email)
+            output.token = jwt.sign(email);
+            res.status(200).json(output)
 
 app.get("/v1/orders/:id/slot", async (req, res) => {                 
     let id = req.params.id
@@ -374,13 +398,13 @@ app.get("/v1/orders/:vid/menu", async (req, res) => {
   res.json(result)
 })
 
-app.get("/v1/orders/:fid/menu/:vid", async (req, res) => {
+app.get("/v1/orders/:vid/menu/:fid", async (req, res) => {
   let vid = req.params.vid
   let fid = req.params.fid
   let foodAndExtra = await ordersModel.getFoodAndExtra(vid, fid)
   res.json(foodAndExtra)
 })
-  
+
 app.get("/v1/orders/:vid/combination", async (req, res) => {
   let vid = req.params.vid
   let result = await ordersModel.getBaseMainExtraList(vid)
@@ -390,25 +414,26 @@ app.get("/v1/orders/:vid/combination", async (req, res) => {
 app.put("/v1/orders/:oid/status/collected", async (req, res) => {
   let oid = req.params.oid
   let [err, result] = await ordersModel.updateOrderStatusToCollected(oid)
-// if (err == "order_status_not_exist") {
-//   res.status(400).json({
-//     message: err
-//   })
-// } else if (err) {
-//   res.status(500).json(err)
-// } else if (result.affectedRows == 0){
-//   res.status(404).send()
-// }else {
-//   res.json(await orderModel.getOrderStatus(oid))
-// }
+  // if (err == "order_status_not_exist") {
+  //   res.status(400).json({
+  //     message: err
+  //   })
+  // } else if (err) {
+  //   res.status(500).json(err)
+  // } else if (result.affectedRows == 0){
+  //   res.status(404).send()
+  // }else {
+  //   res.json(await orderModel.getOrderStatus(oid))
+  // }
   res.json(result)
 })
-  
+
 app.post("/v1/orders/new", async (req, res) => {
-  let {orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice} = req.body
+  let { orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice } = req.body
   //let foods = req.body.foods
-  let response = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
-  res.json(response)
+  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  if (err) res.status(400).send()
+  else res.status(200).send()
 
 })
 
@@ -417,13 +442,125 @@ app.get("/v1/customer-main/main", async (req, res) => {
   res.json(result)
 })
 
+app.get("/v1/orders/:cid/payment-method", async (req, res) => {
+  let cid = req.params.cid
+  let result = await ordersModel.getPaymentMethod(cid)
+  res.json(result)
+})
+app.post("/testfirebase", async (req, res) => {
+  let {test, testmsg, cid} = req.body
+  let result = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = result[0].token_firebase
+  x = await sendToFirebase(test, testmsg, token)
+  res.status(200).send()
+})
 
+
+app.put('/v1/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  var currentDate = new Date()
+  let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
+  let cid = cidA[0].customer_id
+  let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = tokenA[0].token_firebase
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id, currentDate)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    setTimeout(async () => {
+      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
+    },5000)
+    setTimeout(async () => {
+      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      if(orderStatus != "COLLECTED"){
+        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
+        x = sendToFirebase("15min leaw ai sus", "time out", token)
+        
+      } 
+    },10000)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      } 
+  }
+
+  if(order_status == "CANCELLED"){
+    x = sendToFirebase("noti", "order cancelled", token)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
+    if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      res.status(200).send()
+    } 
+  }
   
+})
+
+function sendToFirebase(title, body, token) {
+
+  getAccessToken().then(function (access_token) {
+
+    // var title = req.body.title;
+    // var body = req.body.body;
+    // var token = req.body.token;
+
+    request.post({
+      headers: {
+        Authorization: 'Bearer ' + access_token
+      },
+      url: "https://fcm.googleapis.com/v1/projects/vcanteen-d8ede/messages:send",
+      body: JSON.stringify(
+        {
+          "message": {
+            "token": token,
+            "notification": {
+              "body": body,
+              "title": title,
+            }
+          }
+        }
+      )
+    }, function (error, response, body) {
+      //res.end(body);
+      console.log(body);
+    });
+  });
+};
+
+app.use('/api', router);
+
+function getAccessToken() {
+  return new Promise(function (resolve, reject) {
+    var key = require("./service-account.json");
+    var jwtClient = new google.auth.JWT(
+      key.client_email,
+      null,
+      key.private_key,
+      SCOPES,
+      null
+    );
+    jwtClient.authorize(function (err, tokens) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(tokens.access_token);
+    });
+  });
+}
+
+exports.api = functions.https.onRequest(app);
+
 let port = process.env.PORT;
 if (port == null || port == "") {
   port = 3000;
 }
 
 http.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+  console.log(`Server listening on port ${port}`);
 });

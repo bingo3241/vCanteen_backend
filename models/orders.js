@@ -51,49 +51,49 @@ async function updateOrderStatusToCollected(id) {
 }
 
 async function getOrderStatus(id) {
-  let orderStatus = await db.query("select * from Orders where order_id = ?", [id])
-  return orderStatus.length == 1 ? orderStatus[0] : null
+    let orderStatus = await db.query("select * from Orders where order_id = ?", [id])
+    return orderStatus.length == 1 ? orderStatus[0] : null
 }
 
 async function getSlotNo(id) {
-  let slotNo = await db.query("select slot_id as slotID from Is_At where order_id = ?", [id])
-  return slotNo.length == 1 ? slotNo[0] : null
+    let slotNo = await db.query("select slot_id as slotID from Is_At where order_id = ?", [id])
+    return slotNo.length == 1 ? slotNo[0] : null
 }
 
 async function getVendorMenu(vid) {
-  let minBasePrice = 999999999
-  let minMainPrice = 999999999
-  let minCombinationPrice = 0
-  let availist = []
-  let soldoutlist = []
-  let hasCombination = true
-  let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
-  let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-  let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
-  menulist.forEach(menu => {
-      if (menu.food_type === "COMBINATION_BASE") {
-          if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
-      }
-      if (menu.food_type === "COMBINATION_MAIN") {
-          if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
-      }
-  })
-  foodlist.forEach(food => {
-      const {food_id,food_name,food_price} = food
-      if (food.food_status == "AVAILABLE") {
+    let minBasePrice = 999999999
+    let minMainPrice = 999999999
+    let minCombinationPrice = 0
+    let availist = []
+    let soldoutlist = []
+    let hasCombination = true
+    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
+    let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
+    let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
+    menulist.forEach(menu => {
+        if (menu.food_type === "COMBINATION_BASE") {
+            if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
+        }
+        if (menu.food_type === "COMBINATION_MAIN") {
+            if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
+        }
+    })
+    foodlist.forEach(food => {
+        const {food_id,food_name,food_price} = food
+        if (food.food_status == "AVAILABLE") {
           availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
-      }
-      if (food.food_status == "SOLD_OUT") {
+        }
+        if (food.food_status == "SOLD_OUT") {
           soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
-      }
-  })    
-  minCombinationPrice = minBasePrice+minMainPrice
-  if (minBasePrice == 999999999 || minMainPrice == 999999999) {
-      minCombinationPrice = null
-      hasCombination = false
-  }
-  let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
-  return response
+        }
+    })    
+    minCombinationPrice = minBasePrice+minMainPrice
+    if (minBasePrice == 999999999 || minMainPrice == 999999999) {
+        minCombinationPrice = null
+        hasCombination = false
+    }
+    let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
+    return response
 }
 
 async function getFoodAndExtra(vid, fid) {
@@ -125,15 +125,16 @@ async function getBaseMainExtraList(vid) {
 }
 
 async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
-  let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
-  let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
-  custAcc[0].balance -= totalPrice
-  vendorAcc[0].balance += totalPrice
-  let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
-  let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
-  let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
-  let result = []
-  await orderList.forEach(async order => {
+    try {
+    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
+    let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
+    custAcc[0].balance -= totalPrice
+    vendorAcc[0].balance += totalPrice
+    let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
+    let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
+    let result = []
+    await orderList.forEach(async order => {
         let fids = []
         let {orderPrice, orderName, orderNameExtra, foodList} = order
         foodList.forEach(food => {
@@ -147,8 +148,17 @@ async function postNewOrder(orderList, customerId, vendorId, createdAt, customer
             let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
       
-  })
-  return result
+    })
+    return [null, result]
+    } catch (err){
+        return [err, null]
+    }
+}
+
+async function getPaymentMethod (cid) {
+    let paymentMethod = await db.query("select a.money_account_id as customerMoneyAccountId, a.service_provider as serviceProvider from Customer_Links l join CustomerMoneyAccounts a on l.money_account_id = a.money_account_id where l.customer_id = ?", [cid])
+    let response = {"availablePaymentMethod" : paymentMethod}
+    return response
 }
 
 module.exports = {
@@ -162,5 +172,6 @@ module.exports = {
   getFoodAndExtra,
   getBaseMainExtraList,
   postNewOrder,
-  getSaleRecords
+  getSaleRecords,
+  getPaymentMethod,
 }

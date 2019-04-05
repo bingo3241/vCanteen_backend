@@ -168,8 +168,8 @@ var progList = [
 var output = [];
 var temp_image = [];
 var currentOrderID = null;
-progList.forEach(({order_id,order_name,order_name_extra,food_image,order_price,restaurant_name,restaurant_number,order_status,created_at}) => {
-    if(currentOrderID !== order_id) {
+progList.forEach(({ order_id, order_name, order_name_extra, food_image, order_price, restaurant_name, restaurant_number, order_status, created_at }) => {
+    if (currentOrderID !== order_id) {
         currentOrderID = order_id;
         var order = {
             order_id: order_id,
@@ -181,13 +181,13 @@ progList.forEach(({order_id,order_name,order_name_extra,food_image,order_price,r
         }
         output.push(order)
         temp_image = []
-    }else {
-        if(food_image == null) {} 
+    } else {
+        if (food_image == null) { }
         else {
             const target = output.length - 1;
             output[target].food_image.push(food_image)
         }
-        
+
     }
-}) 
+})
 console.log(output);

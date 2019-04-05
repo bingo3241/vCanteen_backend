@@ -2,13 +2,25 @@
     "name": "vCanteen_backend",
     "version": "0.0.1",
     "description": "backend of vcanteen",
+    "scripts": {
+        "serve": "firebase serve --only functions",
+        "shell": "firebase functions:shell",
+        "start": "npm run shell",
+        "deploy": "firebase deploy --only functions",
+        "logs": "firebase functions:log"
+    },
     "dependencies": {
         "crypto-js": "^3.1.9-1",
         "express": "^4.16.4",
+        "firebase-admin": "~7.0.0",
+        "firebase-functions": "^2.2.0",
+        "googleapis": "^39.1.0",
         "jsonwebtoken": "^8.5.1",
         "mailgun-js": "^0.22.0",
         "mysql2": "^1.6.5",
+        "request": "^2.88.0",
         "socket.io": "^2.2.0",
         "socksjs": "^0.5.0"
-    }
+    },
+    "private": true
 }

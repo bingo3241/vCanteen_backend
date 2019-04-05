@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "",
+    "rewrites": [
+      {
+        "source": "/api/send",
+        "function": "api"
+      }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
