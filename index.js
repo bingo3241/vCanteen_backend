@@ -416,9 +416,12 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     setTimeout(async () => {
       x = sendToFirebase("10min leaw ai sus", "collect pls", token)
     },5000)
-    setTimeout(async (order_id) => {
-      if(await db.query("select order_status from Orders where order_id = ?", [order_id]) != "COLLECTED"){
+    setTimeout(async () => {
+      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      if(orderStatus != "COLLECTED"){
+        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = sendToFirebase("15min leaw ai sus", "time out", token)
+        
       } 
     },10000)
     if (err) {
@@ -431,8 +434,6 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   }
 
   if(order_status == "CANCELLED"){
-    let x = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
-    let token = x[0].token_firebase
     x = sendToFirebase("noti", "order cancelled", token)
     let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
     if (err) {
