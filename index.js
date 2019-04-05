@@ -45,8 +45,8 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
     var email = req.body.email;
     if(await customersModel.isInDatabase(email)) {
         var customer_id = await customersModel.getCustomerID(email)
+        var uid = await firebase.getUID(email);
         var newpassword = passwordModule.generate();
-        var uid = await firebase.getUID(email)
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
         console.log('Hash: '+hash)
@@ -68,7 +68,7 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
 app.put('/v1/user-authentication/customer/password/change' , async (req,res) => {
     var email = req.body.email;
     var customer_id = await customersModel.getCustomerID(email)
-    var uid = await firebase.getUID(email);
+    var uid = await firebase.getUID(email)
     var pwd = req.body.passwordNew;
     let [err, result] = await customersModel.changePasswords(pwd,customer_id)
     if (err) {
@@ -86,7 +86,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
   var email = req.body.email;
   if(await vendorsModel.isInDatabase(email)) {
       var vendor_id = await vendorsModel.getVendorID(email)
-      var uid = await firebase.getUID(email)
+      var uid = firebase.getUID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
@@ -110,7 +110,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
-  var uid = await firebase.getUID(email);
+  var uid = await firebase.getUID(email)
   console.log('UID: '+uid)
   var pwd = req.body.passwordNew;
   console.log(pwd);

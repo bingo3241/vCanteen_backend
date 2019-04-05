@@ -1,6 +1,7 @@
 const firebase = require('./db/firebase')
 
 var email = 'bingo6689@gmail.com'
+
 async function getUID(email) {
     var uid = await firebase.getUID(email)
     console.log('UID: '+uid)
