@@ -381,7 +381,9 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
             output.customer_id = await customersModel.getCustomerID(email)
             output.token = jwt.sign(email);
             res.status(200).json(output)
-
+        }
+      }        
+})
 app.get("/v1/orders/:id/slot", async (req, res) => {                 
     let id = req.params.id
     let slotNo = await ordersModel.getSlotNo(id)
@@ -390,7 +392,7 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
     } else {
       res.status(404).send()
     }
-  })
+})
   
 app.get("/v1/orders/:vid/menu", async (req, res) => {                     
   let vid = req.params.vid
