@@ -24,6 +24,7 @@ const db = require('./db/db')
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
 
+const jwt = require('./library/jwt');
 
 const verifyJWT = (req, res, next) => {
   var token = req.body.token
@@ -500,6 +501,15 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     } 
   }
   
+})
+
+app.post("/v2/orders/customer/rating", async (req, res) => {
+  let {customerId, vendorId, score, comment} = req.body
+  
+  let [err, result] = vendorsModel.reviewVendor(customerId, vendorId, score, comment)
+  if (err) {
+    res.status(400).send()
+  }else res.status(200).send()
 })
 
 function sendToFirebase(title, body, token) {
