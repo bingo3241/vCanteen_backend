@@ -24,6 +24,7 @@ const db = require('./db/db')
 const passwordModule = require('./helpers/password');
 const emailModule = require('./helpers/email');
 
+const jwt = require('./library/jwt');
 
 const verifyJWT = (req, res, next) => {
   var token = req.body.token
