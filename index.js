@@ -449,7 +449,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
-    },5000)
+    },10*1000)
     setTimeout(async () => {
       let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
       let orderStatus = orderStatusA[0].order_status
@@ -458,7 +458,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
         
       } 
-    },10000)
+    },20*1000)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
