@@ -2,6 +2,7 @@
 node_modules/
 jwt_tai.js
 test.js
+rearrange.js
 # Logs
 logs
 *.log

@@ -361,28 +361,6 @@ app.post('/hashtest', async (req, res) => {
   res.json(passwordModule.hash(a));
 })
 
-app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
-    var output = new Object()
-    if(req.body.account_type == 'FACEBOOK') {
-        var email = req.body.email
-        console.log('email: '+email)
-        if(await customersModel.isInDatabase(email)) {
-            output.status = 'success'
-            output.customer_id = await customersModel.getCustomerID(email)
-            output.token = jwt.sign(email);
-            res.status(200).json(output)
-        } else {
-            var first_name = req.body.first_name
-            var last_name = req.body.last_name
-            var url = req.body.profile_url
-            await customersModel.insertFacebook(first_name,last_name,email,url)
-            output.status = 'success'
-            output.customer_id = await customersModel.getCustomerID(email)
-            output.token = jwt.sign(email);
-            res.status(200).json(output)
-        }
-      }        
-})
 app.get("/v1/orders/:id/slot", async (req, res) => {                 
     let id = req.params.id
     let slotNo = await ordersModel.getSlotNo(id)
