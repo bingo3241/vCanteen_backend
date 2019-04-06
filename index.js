@@ -442,8 +442,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
   let cid = cidA[0].customer_id
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
-  let token = "fns1WiD8_pU:APA91bEC3t2AdJMYbkGuwibNmtZVxGpfhoB6mQO-4_AdyETnZMpuxBtqqxDd3pSp5tu4ntHcKnoWPz2b72w7Tmn7Cu2ElKTPCJl1GolBgYKPZblEHYkKBWnKQnoCJYzjPhapQsxp9sVm"
-  //tokenA[0].token_firebase
+  let token = tokenA[0].token_firebase
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
