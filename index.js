@@ -445,17 +445,17 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   let token = "fns1WiD8_pU:APA91bEC3t2AdJMYbkGuwibNmtZVxGpfhoB6mQO-4_AdyETnZMpuxBtqqxDd3pSp5tu4ntHcKnoWPz2b72w7Tmn7Cu2ElKTPCJl1GolBgYKPZblEHYkKBWnKQnoCJYzjPhapQsxp9sVm"
   //tokenA[0].token_firebase
   if(order_status == "DONE"){
-    firebase.sendToFirebase("One of your orders is ready for pick-up.", "view order", token)
+    firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
-      x = firebase.sendToFirebase("You have 5 minutes left to pick up your order.", "view order", token)
+      x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
     },5000)
     setTimeout(async () => {
       let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
-        x = firebase.sendToFirebase("Your order has expired.", "view order", token)
+        x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
         
       } 
     },10000)
@@ -469,7 +469,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   }
 
   if(order_status == "CANCELLED"){
-    x = firebase.sendToFirebase("One of your orders has been cancelled.", "view order", token)
+    x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
     let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
     if (err) {
       res.status(500).json(err)
