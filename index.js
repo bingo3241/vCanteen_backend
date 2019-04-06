@@ -451,7 +451,8 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
     },5000)
     setTimeout(async () => {
-      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      let orderStatus = orderStatusA[0].order_status
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
