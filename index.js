@@ -19,6 +19,7 @@ const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
 const db = require('./db/db')
+const firebase = require('./db/firebase')
 
 
 const passwordModule = require('./helpers/password');
@@ -44,6 +45,7 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
     var email = req.body.email;
     if(await customersModel.isInDatabase(email)) {
         var customer_id = await customersModel.getCustomerID(email)
+        var uid = await firebase.getUID(email);
         var newpassword = passwordModule.generate();
         console.log('New password generated')
         var hash = passwordModule.hash(newpassword);
@@ -54,11 +56,10 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
         } else if (result.affectedRows == 0){
           res.status(404).send()
         }else {
-          res.status(200).send('Password has been updated')
-        }
-        console.log('Password has been updated')
-        emailModule.mailto(newpassword,email);
-        res.status(200).json('Success');
+          console.log('Password has been updated')
+          await firebase.updatePassword(uid, hash)
+          emailModule.mailto(newpassword,email);
+          res.status(200).json('Success');        }
     } else {
         res.status(404).json('Error!');
     }
@@ -67,15 +68,15 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
 app.put('/v1/user-authentication/customer/password/change' , async (req,res) => {
     var email = req.body.email;
     var customer_id = await customersModel.getCustomerID(email)
-    console.log(customer_id);
+    var uid = await firebase.getUID(email)
     var pwd = req.body.passwordNew;
-    console.log(pwd);
     let [err, result] = await customersModel.changePasswords(pwd,customer_id)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
+        await firebase.updatePassword(uid, pwd)
         res.status(200).send('Password is changed')
       }
 })
@@ -85,6 +86,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
   var email = req.body.email;
   if(await vendorsModel.isInDatabase(email)) {
       var vendor_id = await vendorsModel.getVendorID(email)
+      var uid = firebase.getUID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
@@ -95,11 +97,11 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
       } else if (result.affectedRows == 0){
         res.status(404).send()
       }else {
-        res.status(200).send('Password has been updated')
+        await firebase.updatePassword(uid, hash)
+        console.log('Password has been updated')
+        emailModule.mailto(newpassword,email);
+        res.status(200).send('Success');
       }
-      console.log('Password has been updated')
-      emailModule.mailto(newpassword,email);
-      res.status(200).send('Success');
   } else {
     res.status(404).send('Error!');
   }
@@ -108,16 +110,19 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
 app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
   var email = req.body.email
   var vendor_id = await vendorsModel.getVendorID(email);
-    var pwd = req.body.passwordNew;
-    console.log(pwd);
-    let [err, result] = await vendorsModel.changePasswords(pwd, vendor_id)
-    if (err) {
-        res.status(500).json(err)
-      } else if (result.affectedRows == 0){
-        res.status(404).send()
-      }else {
-        res.status(200).send('Password is changed')
-      }
+  var uid = await firebase.getUID(email)
+  console.log('UID: '+uid)
+  var pwd = req.body.passwordNew;
+  console.log(pwd);
+  let [err, result] = await vendorsModel.changePasswords(pwd, vendor_id)
+  if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      await firebase.updatePassword(uid, pwd)
+      res.status(200).send('Password is changed')
+    }
 })
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
