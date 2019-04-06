@@ -2,14 +2,8 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 
-const functions = require('firebase-functions');
 
-var { google } = require('googleapis');
-var MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
-var SCOPES = [MESSAGING_SCOPE];
 
-var router = express.Router();
-var request = require('request');
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -475,13 +469,13 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     let x = await vendorsModel.assignSlot(order_id, currentDate)
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
-      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
+      x = firebase.sendToFirebase("10min leaw ai sus", "collect pls", token)
     },5000)
     setTimeout(async () => {
       let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
-        x = sendToFirebase("15min leaw ai sus", "time out", token)
+        x = firebase.sendToFirebase("15min leaw ai sus", "time out", token)
         
       } 
     },10000)
@@ -508,60 +502,9 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   
 })
 
-function sendToFirebase(title, body, token) {
 
-  getAccessToken().then(function (access_token) {
 
-    // var title = req.body.title;
-    // var body = req.body.body;
-    // var token = req.body.token;
 
-    request.post({
-      headers: {
-        Authorization: 'Bearer ' + access_token
-      },
-      url: "https://fcm.googleapis.com/v1/projects/vcanteen-d8ede/messages:send",
-      body: JSON.stringify(
-        {
-          "message": {
-            "token": token,
-            "notification": {
-              "body": body,
-              "title": title,
-            }
-          }
-        }
-      )
-    }, function (error, response, body) {
-      //res.end(body);
-      console.log(body);
-    });
-  });
-};
-
-app.use('/api', router);
-
-function getAccessToken() {
-  return new Promise(function (resolve, reject) {
-    var key = require("./service-account.json");
-    var jwtClient = new google.auth.JWT(
-      key.client_email,
-      null,
-      key.private_key,
-      SCOPES,
-      null
-    );
-    jwtClient.authorize(function (err, tokens) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(tokens.access_token);
-    });
-  });
-}
-
-exports.api = functions.https.onRequest(app);
 
 let port = process.env.PORT;
 if (port == null || port == "") {
