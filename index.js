@@ -446,6 +446,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
+    console.log(x)
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
