@@ -446,7 +446,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
-    console.log(x)
+    let y = await db.query('SELECT slot_id FROM Is_At WHERE order_id =?', [order_id])
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
@@ -454,12 +454,10 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     setTimeout(async () => {
       let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
       let orderStatus = orderStatusA[0].order_status
-      console.log(orderStatus)
-      console.log(orderStatus != "COLLECTED")
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
-        
+        z = db.query("DELETE FROM Food WHERE slot_id = ?", [y])        
       } 
     },20*1000)
     if (err) {
@@ -473,6 +471,8 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
 
   if(order_status == "CANCELLED"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
+    let y = await db.query('SELECT slot_id FROM Is_At WHERE order_id =?', [order_id])
+    z = db.query("DELETE FROM Food WHERE slot_id = ?", [y])
     let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
     if (err) {
       res.status(500).json(err)
