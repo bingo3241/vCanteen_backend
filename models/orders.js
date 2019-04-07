@@ -99,7 +99,7 @@ async function getVendorMenu(vid) {
 async function getFoodAndExtra(vid, fid) {
   let food = await db.query("select food_id as foodId, food_name as foodName, food_price as foodPrice from Food where food_id =?", [fid])
   let extraList = await db.query("select food_id as foodId, food_name as foodName, food_price as foodPrice, food_status as foodStatus from Food where food_type = 'EXTRA' and vendor_id = ?", [vid])
-  let response = {"food" : food[0], "extralist" : extraList}
+  let response = {"food" : food[0], "extraList" : extraList}
   return response
 }
 
