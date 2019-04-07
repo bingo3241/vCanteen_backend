@@ -77,7 +77,7 @@ async function getAlaMenu(vendor_id){
 
 async function getOrder(vendor_id){
     try{
-        let result = await db.query('SELECT created_at AS timestamp,order_name AS orderName,order_name_extra AS orderNameExtra FROM Orders WHERE vendor_id = ? AND order_status = "COOKING" ', [vendor_id])
+        let result = await db.query('SELECT created_at AS timestamp,order_name AS orderName,order_name_extra AS orderNameExtra, order_id AS orderId FROM Orders WHERE vendor_id = ? AND order_status = "COOKING" ', [vendor_id])
         return result
     } 
     catch(err) {
