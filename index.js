@@ -407,9 +407,10 @@ app.put("/v1/orders/:oid/status/collected", async (req, res) => {
 })
 
 app.post("/v1/orders/new", async (req, res) => {
-  let { orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice } = req.body
+  let { orderList, customerId, vendorId, customerMoneyAccountId, totalPrice } = req.body
   //let foods = req.body.foods
-  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  var currentDate = new Date()
+  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice)
   if (err) res.status(400).send()
   else res.status(200).send()
 
@@ -445,7 +446,6 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
-    let y = await db.query('SELECT slot_id FROM Is_At WHERE order_id =?', [order_id])
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
