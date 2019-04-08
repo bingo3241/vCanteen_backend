@@ -409,7 +409,8 @@ app.put("/v1/orders/:oid/status/collected", async (req, res) => {
 app.post("/v1/orders/new", async (req, res) => {
   let { orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice } = req.body
   //let foods = req.body.foods
-  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  var currentDate = new Date()
+  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice)
   if (err) res.status(400).send()
   else res.status(200).send()
 
