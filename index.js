@@ -162,7 +162,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
       try {
-        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+        await customersModel.insertFirebaseToken(email, firebaseToken)
       } catch (err) {
         console.log('insert firebase token error')
       }
@@ -174,14 +174,14 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(404).json({status: 'error'})
     }
   } else {
-    var in_db = await vendorsModel.getAccountType(email)
+    var in_db = await customersModel.getAccountType(email)
     if(account_type != in_db) {
       console.log('Account type conflicted: input is '+account_type+' but in database is '+in_db)
       return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
       try {
-        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+        await customersModel.insertFirebaseToken(email, firebaseToken)
       } catch (err) {
         console.log('insert firebase token error')
       }
@@ -191,7 +191,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(200).json(output)  
     } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
       try {
-        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+        await customersModel.insertFirebaseToken(email, firebaseToken)
       } catch (err) {
         console.log('insert firebase token error')
       }
