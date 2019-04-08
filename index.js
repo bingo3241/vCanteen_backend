@@ -123,7 +123,7 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
   var email = req.body.email
   var isInDatabase = await customersModel.isInDatabase(email)
   if(isInDatabase == false) {
-    res.status(404).send()
+    return res.status(404).send()
   }
   var account_type = await customersModel.getAccountType(email)
   if (account_type == 'NORMAL' && isInDatabase == true) {
