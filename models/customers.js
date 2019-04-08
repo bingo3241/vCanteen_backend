@@ -27,10 +27,10 @@ async function isInDatabase(email) {
 async function NormalAuth(email, password) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Customers WHERE email = ? AND passwd = ?', [email, password])
     if( temp[0].Count == 1 ){
-        console.log("In database?: true")
+        console.log("Authentication: true")
         return true;
     } else {
-        console.log("In database?: false")
+        console.log("Authentication: false")
         return false;
     }
 }
@@ -38,6 +38,17 @@ async function NormalAuth(email, password) {
 
 async function insertFacebook(first_name, last_name, email, profile_url) {
     return await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', firstname = ?, lastname = ?, customer_image = ?, email = ? ", [first_name, last_name, profile_url, email])
+}
+
+async function insertFirebaseToken(email, token){
+    try{
+        let result = await db.query('INSERT INTO Customers SET token_firebase = ? WHERE email = ? ', [token, email])
+        console.log('firebaseToken inserted to '+email)
+        return result
+    } 
+    catch(err) {
+        return err
+    }
 }
 
 async function changePasswords(pwd,customer_id) {
@@ -56,8 +67,8 @@ async function getApprovedVendor() { //id name, number, image, status
 }
 
 async function getAccountType(email) {
-    let result = await db.query("SELECT account_type AS accountType FROM Customers WHERE email = ?", [email])
-    return result[0].accountType
+    let result = await db.query("SELECT Customers.account_type FROM Customers WHERE Customers.email = ?", [email])
+    return result[0].account_type
 }
 
 module.exports = {
@@ -67,6 +78,7 @@ module.exports = {
     isInDatabase,
     NormalAuth,
     insertFacebook,
+    insertFirebaseToken,
     changePasswords,
     getApprovedVendor,
     getAccountType

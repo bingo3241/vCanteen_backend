@@ -80,7 +80,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
   var email = req.body.email;
   if(await vendorsModel.isInDatabase(email)) {
       var vendor_id = await vendorsModel.getVendorID(email)
-      var uid = firebase.getUID(email)
+      var uid = await firebase.getUID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
@@ -121,8 +121,15 @@ app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
   var email = req.body.email
-  if (await customersModel.isInDatabase(email) == true) {
+  var isInDatabase = await customersModel.isInDatabase(email)
+  if(isInDatabase == false) {
+    return res.status(404).send()
+  }
+  var account_type = await customersModel.getAccountType(email)
+  if (account_type == 'NORMAL' && isInDatabase == true) {
     res.status(200).send()
+  } else if(account_type == 'FACEBOOK' && isInDatabase == true) {
+    res.status(409).send()
   } else {
     res.status(404).send()
   }
@@ -130,9 +137,16 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
 
 app.put('/v1/user-authentication/vendor/verify/email', async (req, res) => {
   var email = req.body.email
-  if(await vendorsModel.isInDatabase(email) == true) {
+  var isInDatabase = await vendorsModel.isInDatabase(email)
+  if(isInDatabase == false) {
+    return res.status(404).send()
+  }
+  var account_type = await vendorsModel.getAccountType(email)
+  if (account_type == 'NORMAL' && isInDatabase == true) {
     res.status(200).send()
-  }else {
+  } else if(account_type == 'FACEBOOK' && isInDatabase == true) {
+    res.status(409).send()
+  } else {
     res.status(404).send()
   }
 })
@@ -147,6 +161,11 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var last_name = req.body.last_name
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email);
@@ -155,15 +174,27 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(404).json({status: 'error'})
     }
   } else {
-    if(account_type != await customersModel.getAccountType(email)) {
-      res.status(409).json({status: 'wrong_type'})
+    var in_db = await vendorsModel.getAccountType(email)
+    if(account_type != in_db) {
+      console.log('Account type conflicted: input is '+account_type+' but in database is '+in_db)
+      return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
       res.status(200).json(output)  
     } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
@@ -173,24 +204,74 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
 })
 
 app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
+  var output = new Object()
   var email = req.body.email
-  var password = req.body.password;
-  if(await vendorsModel.NormalAuth(email, password)) {
-      var result = new Object()
-      result.status = 'success'
-      result.vendor_id = await vendorsModel.getVendorID(email)
-      result.vendorToken = jwt.sign(email);
-      res.status(200).json(result)
-  } else {
+  var password = req.body.password
+  var account_type = req.body.account_type
+  var firebaseToken = req.body.firebaseToken
+  if(await vendorsModel.isInDatabase(email) == false) {
+    if(account_type == 'FACEBOOK') {
+      await vendorsModel.insertFacebook(email)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email);
+      res.status(200).json(output)
+    } else {
       res.status(404).json({status: 'error'})
+    }
+  } else {
+    var in_db = await vendorsModel.getAccountType(email)
+    if(account_type != in_db) {
+      console.log('Account type conflicted: input is '+account_type+' but in database is '+in_db)
+      return res.status(409).json({status: 'wrong_type'})
+    }
+    if(account_type == 'FACEBOOK') {
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email)
+      res.status(200).json(output)  
+    } else if(account_type == 'NORMAL' && await vendorsModel.NormalAuth(email,password) == true) {
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email)
+      res.status(200).json(output)
+    } else {
+      res.status(404).json({status: 'error'})
+    }
   }
-  console.log('email: '+email)
+  // var email = req.body.email
+  // var password = req.body.password;
+  // if(await vendorsModel.NormalAuth(email, password)) {
+  //     var result = new Object()
+  //     result.status = 'success'
+  //     result.vendor_id = await vendorsModel.getVendorID(email)
+  //     result.vendorToken = jwt.sign(email);
+  //     res.status(200).json(result)
+  // } else {
+  //     res.status(404).json({status: 'error'})
+  // }
+  // console.log('email: '+email)
 })
 
 app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
   var token = req.body.token
   if(jwt.verify(token) == false) {
-      console.log("Verify failed")
+      console.log("Invalid token")
       res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})
@@ -200,7 +281,7 @@ app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
 app.post('/v1/user-authentication/vendor/verify/token', async (req,res) => {
   var token = req.body.token
   if(jwt.verify(token) == false) {
-      console.log("Verify failed")
+      console.log("Invalid token")
       res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})
