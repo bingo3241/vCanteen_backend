@@ -208,7 +208,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
     }
   } else {
     if(account_type != await vendorsModel.getAccountType(email)) {
-      res.status(409).json({status: 'wrong_type'})
+      return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
       await vendorsModel.insertFirebaseToken(email, firebaseToken)
@@ -216,12 +216,14 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email)
       res.status(200).json(output)  
-    } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
+    } else if(account_type == 'NORMAL' && await vendorsModel.NormalAuth(email,password) == true) {
       await vendorsModel.insertFirebaseToken(email, firebaseToken)
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email)
       res.status(200).json(output)
+    } else {
+      res.status(404).json({status: 'error'})
     }
   }
   // var email = req.body.email
