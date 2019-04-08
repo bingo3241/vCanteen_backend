@@ -456,7 +456,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
-        z = db.query("DELETE FROM Food WHERE slot_id = ?", [y])        
+        z = db.query("DELETE FROM Is_At WHERE order_id = ?", [order_id])        
       } 
     },20*1000)
     if (err) {
@@ -470,8 +470,6 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
 
   if(order_status == "CANCELLED"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
-    let y = await db.query('SELECT slot_id FROM Is_At WHERE order_id =?', [order_id])
-    z = db.query("DELETE FROM Food WHERE slot_id = ?", [y])
     let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
     if (err) {
       res.status(500).json(err)

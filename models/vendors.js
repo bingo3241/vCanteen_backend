@@ -202,22 +202,6 @@ async function assignSlot(order_id,currentDate){
 }
 
 
-
-async function assignSlot(order_id,currentDate){
-    var x = await db.query('SELECT slot_id FROM Is_At')
-    var y = []
-    var z
-    x.forEach(comp =>{
-        y.push(comp)
-    })
-    do{
-        z = Math.floor(Math.random() * 500) + 1
-    }while(y.includes(z)){
-        z = Math.floor(Math.random()*500) + 1
-    }
-    return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
-}
-
 module.exports = {
     getAll,
     get,
