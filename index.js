@@ -138,38 +138,37 @@ app.put('/v1/user-authentication/vendor/verify/email', async (req, res) => {
 })
 app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
   var output = new Object()
-  if(req.body.account_type == 'FACEBOOK') {
-      var email = req.body.email
-      console.log('email: '+email)
-      if(await customersModel.isInDatabase(email)) {
-          output.status = 'success'
-          output.customer_id = await customersModel.getCustomerID(email)
-          output.token = jwt.sign(email);
-          res.status(200).json(output)
-      } else {
-          var first_name = req.body.first_name
-          var last_name = req.body.last_name
-          var url = req.body.profile_url
-          await customersModel.insertFacebook(first_name,last_name,email,url)
-          output.status = 'success'
-          output.customer_id = await customersModel.getCustomerID(email)
-          output.token = jwt.sign(email);
-          res.status(200).json(output)
-
-      }
-  } else if(req.body.account_type == 'NORMAL') {
-      var email = req.body.email
-      var password = req.body.password;
-      if(await customersModel.NormalAuth(email, password)) {
-          var output = new Object()
-          output.status = 'success'
-          output.customer_id = await customersModel.getCustomerID(email)
-          output.token = jwt.sign(email)
-          res.status(200).json(output)
-      } else {
-          res.status(404).json({status: 'error'})
-      }
-      console.log('email: '+email)
+  var email = req.body.email
+  var password = req.body.password
+  var account_type = req.body.account_type
+  if(await customersModel.isInDatabase(email) == false) {
+    if(account_type == 'FACEBOOK') {
+      var first_name = req.body.first_name
+      var last_name = req.body.last_name
+      var url = req.body.profile_url
+      await customersModel.insertFacebook(first_name,last_name,email,url)
+      output.status = 'success'
+      output.customer_id = await customersModel.getCustomerID(email)
+      output.token = jwt.sign(email);
+      res.status(200).json(output)
+    } else {
+      res.status(404).json({status: 'error'})
+    }
+  } else {
+    if(account_type != await customersModel.getAccountType(email)) {
+      res.status(409).json({status: 'wrong_type'})
+    }
+    if(account_type == 'FACEBOOK') {
+      output.status = 'success'
+      output.customer_id = await customersModel.getCustomerID(email)
+      output.token = jwt.sign(email)
+      res.status(200).json(output)  
+    } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
+      output.status = 'success'
+      output.customer_id = await customersModel.getCustomerID(email)
+      output.token = jwt.sign(email)
+      res.status(200).json(output)
+    }
   }
 })
 

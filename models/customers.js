@@ -55,6 +55,11 @@ async function getApprovedVendor() { //id name, number, image, status
     return result
 }
 
+async function getAccountType(email) {
+    let result = await db.query("SELECT account_type AS accountType FROM Customers WHERE email = ?", [email])
+    return result[0].accountType
+}
+
 module.exports = {
     getAll,
     get,
@@ -63,5 +68,6 @@ module.exports = {
     NormalAuth,
     insertFacebook,
     changePasswords,
-    getApprovedVendor
+    getApprovedVendor,
+    getAccountType
 }
