@@ -161,7 +161,11 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var last_name = req.body.last_name
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
-      await customersModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email);
@@ -174,13 +178,21 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
-      await customersModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
       res.status(200).json(output)  
     } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
-      await customersModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
@@ -198,7 +210,11 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
   if(await vendorsModel.isInDatabase(email) == false) {
     if(account_type == 'FACEBOOK') {
       await vendorsModel.insertFacebook(email)
-      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email);
@@ -211,13 +227,21 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
       return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
-      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email)
       res.status(200).json(output)  
     } else if(account_type == 'NORMAL' && await vendorsModel.NormalAuth(email,password) == true) {
-      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      try {
+        await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      } catch (err) {
+        console.log('insert firebase token error')
+      }
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email)
@@ -243,7 +267,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
 app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
   var token = req.body.token
   if(jwt.verify(token) == false) {
-      console.log("Verify failed")
+      console.log("Invalid token")
       res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})
@@ -253,7 +277,7 @@ app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
 app.post('/v1/user-authentication/vendor/verify/token', async (req,res) => {
   var token = req.body.token
   if(jwt.verify(token) == false) {
-      console.log("Verify failed")
+      console.log("Invalid token")
       res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})

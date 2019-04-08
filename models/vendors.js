@@ -237,6 +237,9 @@ async function insertFacebook(email) {
 }
 
 async function insertFirebaseToken(email, token){
+    if(typeof token == 'undefined') {
+        return console.log('firebaseToken is undefined')
+    }
     try{
         let result = await db.query('INSERT INTO Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
         console.log('firebaseToken inserted to '+email)
