@@ -174,8 +174,10 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(404).json({status: 'error'})
     }
   } else {
-    if(account_type != await customersModel.getAccountType(email)) {
-      res.status(409).json({status: 'wrong_type'})
+    var in_db = await vendorsModel.getAccountType(email)
+    if(account_type != in_db) {
+      console.log('Account type conflicted: input is '+account_type+' but in database is '+in_db)
+      return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
       try {
@@ -223,7 +225,9 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
       res.status(404).json({status: 'error'})
     }
   } else {
-    if(account_type != await vendorsModel.getAccountType(email)) {
+    var in_db = await vendorsModel.getAccountType(email)
+    if(account_type != in_db) {
+      console.log('Account type conflicted: input is '+account_type+' but in database is '+in_db)
       return res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
