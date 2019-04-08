@@ -137,9 +137,16 @@ app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
 
 app.put('/v1/user-authentication/vendor/verify/email', async (req, res) => {
   var email = req.body.email
-  if(await vendorsModel.isInDatabase(email) == true) {
+  var isInDatabase = await vendorsModel.isInDatabase(email)
+  if(isInDatabase == false) {
+    return res.status(404).send()
+  }
+  var account_type = await vendorsModel.getAccountType(email)
+  if (account_type == 'NORMAL' && isInDatabase == true) {
     res.status(200).send()
-  }else {
+  } else if(account_type == 'FACEBOOK' && isInDatabase == true) {
+    res.status(409).send()
+  } else {
     res.status(404).send()
   }
 })
@@ -154,6 +161,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var last_name = req.body.last_name
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
+      await customersModel.insertFirebaseToken(email, firebaseToken)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email);
@@ -166,11 +174,13 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       res.status(409).json({status: 'wrong_type'})
     }
     if(account_type == 'FACEBOOK') {
+      await customersModel.insertFirebaseToken(email, firebaseToken)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
       res.status(200).json(output)  
     } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
+      await customersModel.insertFirebaseToken(email, firebaseToken)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
@@ -180,18 +190,52 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
 })
 
 app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
+  var output = new Object()
   var email = req.body.email
-  var password = req.body.password;
-  if(await vendorsModel.NormalAuth(email, password)) {
-      var result = new Object()
-      result.status = 'success'
-      result.vendor_id = await vendorsModel.getVendorID(email)
-      result.vendorToken = jwt.sign(email);
-      res.status(200).json(result)
-  } else {
+  var password = req.body.password
+  var account_type = req.body.account_type
+  var firebaseToken = req.body.firebaseToken
+  if(await vendorsModel.isInDatabase(email) == false) {
+    if(account_type == 'FACEBOOK') {
+      await vendorsModel.insertFacebook(email)
+      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email);
+      res.status(200).json(output)
+    } else {
       res.status(404).json({status: 'error'})
+    }
+  } else {
+    if(account_type != await vendorsModel.getAccountType(email)) {
+      res.status(409).json({status: 'wrong_type'})
+    }
+    if(account_type == 'FACEBOOK') {
+      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email)
+      res.status(200).json(output)  
+    } else if(account_type == 'NORMAL' && await customersModel.NormalAuth(email,password) == true) {
+      await vendorsModel.insertFirebaseToken(email, firebaseToken)
+      output.status = 'success'
+      output.vendor_id = await vendorsModel.getVendorID(email)
+      output.vendorToken = jwt.sign(email)
+      res.status(200).json(output)
+    }
   }
-  console.log('email: '+email)
+  // var email = req.body.email
+  // var password = req.body.password;
+  // if(await vendorsModel.NormalAuth(email, password)) {
+  //     var result = new Object()
+  //     result.status = 'success'
+  //     result.vendor_id = await vendorsModel.getVendorID(email)
+  //     result.vendorToken = jwt.sign(email);
+  //     res.status(200).json(result)
+  // } else {
+  //     res.status(404).json({status: 'error'})
+  // }
+  // console.log('email: '+email)
 })
 
 app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {

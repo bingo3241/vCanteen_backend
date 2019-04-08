@@ -218,6 +218,35 @@ async function assignSlot(order_id,currentDate){
     return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
 }
 
+async function getAccountType(email) {
+    let result = await db.query("SELECT Vendors.account_type FROM Vendors WHERE Vendors.email = ?", [email])
+    var account_type = result[0].account_type
+    console.log('account_type: '+account_type)
+    return account_type
+}
+
+async function insertFacebook(email) {
+    try{
+        let result = await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', email = ? ", [email])
+        console.log('Facebook-type account created: '+email)
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
+async function insertFirebaseToken(email, token){
+    try{
+        let result = await db.query('INSERT INTO Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
+        console.log('firebaseToken inserted to '+email)
+        return result
+    } 
+    catch(err) {
+        return err
+    }
+}
+
 module.exports = {
     getAll,
     get,
@@ -238,5 +267,8 @@ module.exports = {
     updateVendorStatus,
     editMenuStatus,
     assignSlot,
-    changePasswords
+    changePasswords,
+    getAccountType,
+    insertFacebook,
+    insertFirebaseToken
 }
