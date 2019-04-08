@@ -80,7 +80,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
   var email = req.body.email;
   if(await vendorsModel.isInDatabase(email)) {
       var vendor_id = await vendorsModel.getVendorID(email)
-      var uid = firebase.getUID(email)
+      var uid = await firebase.getUID(email)
       var newpassword = passwordModule.generate();
       console.log('New password generated')
       var hash = passwordModule.hash(newpassword);
