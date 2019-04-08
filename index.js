@@ -121,8 +121,12 @@ app.put('/v1/user-authentication/vendor/password/change', async (req, res) => {
 
 app.put('/v1/user-authentication/customer/verify/email', async (req, res) => {
   var email = req.body.email
-  if (await customersModel.isInDatabase(email) == true) {
+  var account_type = await customersModel.getAccountType(email)
+  var isInDatabase = await customersModel.isInDatabase(email)
+  if (account_type == 'NORMAL' && isInDatabase == true) {
     res.status(200).send()
+  } else if(account_type == 'FACEBOOK' && isInDatabase == true) {
+    res.status(409).send()
   } else {
     res.status(404).send()
   }
