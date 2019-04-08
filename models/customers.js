@@ -47,6 +47,7 @@ async function insertFirebaseToken(email, token){
         return result
     } 
     catch(err) {
+        console.log('insert firebaseToken error')
         return err
     }
 }
