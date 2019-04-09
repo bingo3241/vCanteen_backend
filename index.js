@@ -155,6 +155,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
   var email = req.body.email
   var password = req.body.password
   var account_type = req.body.account_type
+  console.log('Sign-in account type: '+account_type)
   if(await customersModel.isInDatabase(email) == false) {
     if(account_type == 'FACEBOOK') {
       var first_name = req.body.first_name
@@ -209,6 +210,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
   var password = req.body.password
   var account_type = req.body.account_type
   var firebaseToken = req.body.firebaseToken
+  console.log('Sign-in account type: '+account_type)
   if(await vendorsModel.isInDatabase(email) == false) {
     if(account_type == 'FACEBOOK') {
       await vendorsModel.insertFacebook(email)
@@ -254,18 +256,6 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
       res.status(404).json({status: 'error'})
     }
   }
-  // var email = req.body.email
-  // var password = req.body.password;
-  // if(await vendorsModel.NormalAuth(email, password)) {
-  //     var result = new Object()
-  //     result.status = 'success'
-  //     result.vendor_id = await vendorsModel.getVendorID(email)
-  //     result.vendorToken = jwt.sign(email);
-  //     res.status(200).json(result)
-  // } else {
-  //     res.status(404).json({status: 'error'})
-  // }
-  // console.log('email: '+email)
 })
 
 app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
