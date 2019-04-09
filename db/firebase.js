@@ -57,13 +57,7 @@ async function updatePassword(uid, pwd) {
 
 
 function sendToFirebase(title, body, token) {
-
     getAccessToken().then(function (access_token) {
-  
-      // var title = req.body.title;
-      // var body = req.body.body;
-      // var token = req.body.token;
-  
       request.post({
         headers: {
           Authorization: 'Bearer ' + access_token
@@ -108,10 +102,36 @@ function sendToFirebase(title, body, token) {
     });
   }
 
+  async function createUser(email) {
+    return await admin.auth().createUser({
+      email: email,
+      password: 'firebaseOnlyNaja',
+      disabled: false
+    }).then(function(userRecord) {
+      // See the UserRecord reference doc for the contents of userRecord.
+      var uid = userRecord.uid
+      console.log('Successfully created new user:', uid);
+      return uid
+    })
+    .catch(function(error) {
+      return console.log('Error creating new user:', error);
+    });
+  }
  // exports.api = functions.https.onRequest(app);
+
+ async function getFirebaseToken(uid) {
+  var ref = await admin.database().ref("users/"+uid+"/firebaseToken");
+  await ref.on("value", function(snapshot) {
+    return snapshot.val();
+  }, function (errorObject) {
+    return console.log("The read failed: " + errorObject.code);
+  });
+ }
 
 module.exports = {
     getUID,
     updatePassword,
-    sendToFirebase
+    sendToFirebase,
+    createUser,
+    getFirebaseToken
 }

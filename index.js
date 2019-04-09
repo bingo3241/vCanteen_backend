@@ -162,11 +162,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var last_name = req.body.last_name
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
-      try {
-        await customersModel.insertFirebaseToken(email, firebaseToken)
-      } catch (err) {
-        console.log('insert firebase token error')
-      }
+      await firebase.createUser(email)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email);
@@ -200,6 +196,8 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
       res.status(200).json(output)
+    } else {
+      res.status(404).json({status: 'error'})
     }
   }
 })
@@ -214,11 +212,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
   if(await vendorsModel.isInDatabase(email) == false) {
     if(account_type == 'FACEBOOK') {
       await vendorsModel.insertFacebook(email)
-      try {
-        await vendorsModel.insertFirebaseToken(email, firebaseToken)
-      } catch (err) {
-        console.log('insert firebase token error')
-      }
+      await firebase.createUser(email)
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email);
@@ -480,9 +474,10 @@ app.put("/v1/orders/:oid/status/collected", async (req, res) => {
 app.post("/v1/orders/new", async (req, res) => {
   let { orderList, customerId, vendorId, customerMoneyAccountId, totalPrice } = req.body
   //let foods = req.body.foods
-  var currentDate = new Date()
-  console.log(currentDate)
-  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice)
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  now = new Date(thistime)
+  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
   if (err) res.status(400).send()
   else res.status(200).send()
 
@@ -510,7 +505,9 @@ app.post("/testfirebase", async (req, res) => {
 app.put('/v1/vendor-main/order/status' , async(req,res) => {
   let order_id = req.body.orderId
   let order_status = req.body.orderStatus
-  var currentDate = new Date()
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
   let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
   let cid = cidA[0].customer_id
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
