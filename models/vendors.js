@@ -236,9 +236,11 @@ async function closeVendor(vendor_id){
     try{
         let result = await db.query('UPDATE Orders SET order_status = "CANCELLED" WHERE vendor_id = ? AND order_status = "COOKING" ' , 
         [vendor_id])
+        console.log('Close vendor success')
         return [null,result]
     } 
     catch(err) {
+        console.log('Close vendor failed')
         return [err,null]
     }
 }
