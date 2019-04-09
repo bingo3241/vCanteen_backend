@@ -162,11 +162,6 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       var last_name = req.body.last_name
       var url = req.body.profile_url
       await customersModel.insertFacebook(first_name,last_name,email,url)
-      try {
-        await customersModel.insertFirebaseToken(email, firebaseToken)
-      } catch (err) {
-        console.log('insert firebase token error')
-      }
       await firebase.createUser(email)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
@@ -201,6 +196,8 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email)
       res.status(200).json(output)
+    } else {
+      res.status(404).json({status: 'error'})
     }
   }
 })
@@ -215,11 +212,6 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
   if(await vendorsModel.isInDatabase(email) == false) {
     if(account_type == 'FACEBOOK') {
       await vendorsModel.insertFacebook(email)
-      try {
-        await vendorsModel.insertFirebaseToken(email, firebaseToken)
-      } catch (err) {
-        console.log('insert firebase token error')
-      }
       await firebase.createUser(email)
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
