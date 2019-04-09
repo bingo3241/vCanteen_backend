@@ -566,11 +566,11 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
 app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
   let vendor_id = req.body.vendorId
   console.log(vendor_id)
-  let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
-  let cid = cidA[0].customer_id
-  let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
-  let token = tokenA[0].token_firebase
-  x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
+  // let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
+  // let cid = cidA[0].customer_id
+  // let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  // let token = tokenA[0].token_firebase
+  // x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
   let[err,result] = vendorsModel.closeVendor(vendor_id)
   if (err) {
     res.status(500).json(err)
