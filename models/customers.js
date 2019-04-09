@@ -37,12 +37,12 @@ async function NormalAuth(email, password) {
 
 
 async function insertFacebook(first_name, last_name, email, profile_url) {
-    return await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', firstname = ?, lastname = ?, customer_image = ?, email = ? ", [first_name, last_name, profile_url, email])
+    return await db.query("INSERT INTO Customers(account_type, firstname, lastname, customer_image, email) VALUES ('FACEBOOK', ?, ?, ?, ?) ", [first_name, last_name, profile_url, email])
 }
 
 async function insertFirebaseToken(email, token){
     try{
-        let result = await db.query('INSERT INTO Customers SET token_firebase = ? WHERE email = ? ', [token, email])
+        let result = await db.query('UPDATE Customers SET token_firebase = ? WHERE email = ? ', [token, email])
         console.log('firebaseToken inserted to '+email)
         return result
     } 

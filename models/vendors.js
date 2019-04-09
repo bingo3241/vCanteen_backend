@@ -211,7 +211,7 @@ async function getAccountType(email) {
 
 async function insertFacebook(email) {
     try{
-        let result = await db.query("INSERT INTO Customers SET account_type = 'FACEBOOK', email = ? ", [email])
+        let result = await db.query("UPDATE Customers SET account_type = 'FACEBOOK', email = ? ", [email])
         console.log('Facebook-type account created: '+email)
         return result
     } 
@@ -222,7 +222,7 @@ async function insertFacebook(email) {
 
 async function insertFirebaseToken(email, token){
     try{
-        let result = await db.query('INSERT INTO Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
+        let result = await db.query('UPDATE Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
         console.log('firebaseToken inserted to '+email)
         return result
     } 
