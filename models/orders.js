@@ -8,15 +8,15 @@ async function getSaleRecords(vendorId) {
     
     var temp = await db.query(  "SELECT order_name AS orderName, COUNT(order_name) AS amount "+
                                 "FROM Orders "+
-                                "WHERE DATE(created_at) = curdate() AND vendor_id = ? "+
+                                "WHERE DATE(created_at) = curdate() AND Orders.vendor_id = ? AND (Orders.order_status = 'COLLECTED' OR Orders.order_status = 'DONE' OR Orders.order_status = 'TIMEOUT') "+
                                 "GROUP BY order_name "+
                                 "ORDER BY COUNT(order_name) DESC "+
                                 "LIMIT 1", [vendorId])
 
     output.bestSeller = temp[0]
     temp2 = await db.query("SELECT SUM(order_price) AS sum "+
-                                            "FROM Orders "+
-                                            "WHERE DATE(created_at) = curdate() AND vendor_id = ?",[vendorId])
+                           "FROM Orders "+
+                           "WHERE DATE(created_at) = curdate() AND vendor_id = ? AND (Orders.order_status = 'COLLECTED' OR Orders.order_status = 'DONE' OR Orders.order_status = 'TIMEOUT')",[vendorId])
     
     output.totalDailySales = {
         sum: Number(temp2[0].sum)
