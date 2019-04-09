@@ -143,12 +143,11 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
         let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, currentDate, vendorId, transacResult.insertId])
         let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
         await result.push(returnres)
-        console.log(result)
         fids.forEach(fid => {
             let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
-      
     })
+    console.log(result)
     return [null, result]
     } catch (err){
         return [err, null]
