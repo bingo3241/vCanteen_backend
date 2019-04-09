@@ -167,6 +167,7 @@ app.post('/v1/user-authentication/customer/check/token', async (req,res) => {
       } catch (err) {
         console.log('insert firebase token error')
       }
+      await firebase.createUser(email)
       output.status = 'success'
       output.customer_id = await customersModel.getCustomerID(email)
       output.token = jwt.sign(email);
@@ -219,6 +220,7 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
       } catch (err) {
         console.log('insert firebase token error')
       }
+      await firebase.createUser(email)
       output.status = 'success'
       output.vendor_id = await vendorsModel.getVendorID(email)
       output.vendorToken = jwt.sign(email);

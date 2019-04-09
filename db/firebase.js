@@ -108,10 +108,24 @@ function sendToFirebase(title, body, token) {
     });
   }
 
+  async function createUser(email) {
+    await admin.auth().createUser({
+      email: email,
+      password: 'firebaseOnlyNaja',
+      disabled: false
+    }).then(function(userRecord) {
+      // See the UserRecord reference doc for the contents of userRecord.
+      console.log('Successfully created new user:', userRecord.uid);
+    })
+    .catch(function(error) {
+      console.log('Error creating new user:', error);
+    });
+  }
  // exports.api = functions.https.onRequest(app);
 
 module.exports = {
     getUID,
     updatePassword,
-    sendToFirebase
+    sendToFirebase,
+    createUser
 }
