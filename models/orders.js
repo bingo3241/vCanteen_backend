@@ -67,7 +67,7 @@ async function getVendorMenu(vid) {
     let availist = []
     let soldoutlist = []
     let hasCombination = true
-    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
+    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
     let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
     let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
     menulist.forEach(menu => {
