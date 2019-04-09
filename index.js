@@ -481,7 +481,6 @@ app.post("/v1/orders/new", async (req, res) => {
   let { orderList, customerId, vendorId, customerMoneyAccountId, totalPrice } = req.body
   //let foods = req.body.foods
   let now = new Date()
-  now.getTime()
   let thistime = now.getTime()+7*60*60*1000
   now = new Date(thistime)
   let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
@@ -512,7 +511,9 @@ app.post("/testfirebase", async (req, res) => {
 app.put('/v1/vendor-main/order/status' , async(req,res) => {
   let order_id = req.body.orderId
   let order_status = req.body.orderStatus
-  var currentDate = new Date()
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
   let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
   let cid = cidA[0].customer_id
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
