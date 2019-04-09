@@ -146,7 +146,6 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
         fids.forEach(fid => {
             let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
-      
     })
     console.log(result)
     return [null, result]
