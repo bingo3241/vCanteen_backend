@@ -232,6 +232,17 @@ async function insertFirebaseToken(email, token){
     }
 }
 
+async function closeVendor(vendor_id){
+    try{
+        let result = await db.query('UPDATE Orders SET order_status = "CANCELLED" WHERE vendor_id = ? AND order_status = "COOKING" ' , 
+        [vendor_id])
+        return [null,result]
+    } 
+    catch(err) {
+        return [err,null]
+    }
+}
+
 module.exports = {
     getAll,
     get,
@@ -255,5 +266,6 @@ module.exports = {
     changePasswords,
     getAccountType,
     insertFacebook,
-    insertFirebaseToken
+    insertFirebaseToken,
+    closeVendor
 }
