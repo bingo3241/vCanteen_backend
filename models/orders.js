@@ -8,15 +8,15 @@ async function getSaleRecords(vendorId) {
     
     var temp = await db.query(  "SELECT order_name AS orderName, COUNT(order_name) AS amount "+
                                 "FROM Orders "+
-                                "WHERE DATE(created_at) = curdate() AND vendor_id = ? "+
+                                "WHERE DATE(created_at) = curdate() AND Orders.vendor_id = ? AND (Orders.order_status = 'COLLECTED' OR Orders.order_status = 'DONE' OR Orders.order_status = 'TIMEOUT') "+
                                 "GROUP BY order_name "+
                                 "ORDER BY COUNT(order_name) DESC "+
                                 "LIMIT 1", [vendorId])
 
     output.bestSeller = temp[0]
     temp2 = await db.query("SELECT SUM(order_price) AS sum "+
-                                            "FROM Orders "+
-                                            "WHERE DATE(created_at) = curdate() AND vendor_id = ?",[vendorId])
+                           "FROM Orders "+
+                           "WHERE DATE(created_at) = curdate() AND vendor_id = ? AND (Orders.order_status = 'COLLECTED' OR Orders.order_status = 'DONE' OR Orders.order_status = 'TIMEOUT')",[vendorId])
     
     output.totalDailySales = {
         sum: Number(temp2[0].sum)
@@ -29,14 +29,14 @@ function getInProgress(customerId) {
   return db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
                 "FROM Orders, Contains, Food, Vendors "+
                 "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
-                "ORDER BY Orders.order_id", [customerId])
+                "ORDER BY FIELD(Orders.order_status, 'DONE', 'COOKING'), Orders.order_id DESC", [customerId])
 }
 
 function getHistory(customerId) {
   return db.query("SELECT Orders.order_id AS orderId , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
                   "FROM Orders, Contains, Food, Vendors "+
                   "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
-                  "ORDER BY Orders.order_id", [customerId])
+                  "ORDER BY Orders.order_id DESC", [customerId])
 }
 
 async function updateOrderStatusToCollected(id) {
@@ -67,7 +67,7 @@ async function getVendorMenu(vid) {
     let availist = []
     let soldoutlist = []
     let hasCombination = true
-    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
+    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
     let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
     let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
     menulist.forEach(menu => {
@@ -141,14 +141,12 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
             fids.push(food.foodId)
         })
         let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, currentDate, vendorId, transacResult.insertId])
-        let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
-        await result.push(returnres)
-        console.log(result)
+        console.log({"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"})
         fids.forEach(fid => {
             let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
-      
     })
+    console.log(result)
     return [null, result]
     } catch (err){
         return [err, null]
