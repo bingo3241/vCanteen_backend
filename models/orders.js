@@ -29,7 +29,7 @@ function getInProgress(customerId) {
   return db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
                 "FROM Orders, Contains, Food, Vendors "+
                 "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
-                "ORDER BY Orders.order_id DESC", [customerId])
+                "ORDER BY FIELD(Orders.order_status, 'DONE', 'COOKING'), Orders.order_id DESC", [customerId])
 }
 
 function getHistory(customerId) {
