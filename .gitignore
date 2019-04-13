@@ -1,6 +1,7 @@
 
 node_modules/
 jwt_tai.js
+service-account.json
 
 # Logs
 logs
