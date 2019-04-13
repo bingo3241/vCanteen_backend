@@ -220,10 +220,10 @@ async function assignSlot(order_id,currentDate){
 
 async function reviewVendor(cid, vid, score, comment, createdAt) {
     try {
-        let x = await db.query("insert into Reviews(customer_id, vendor_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, vid, score, comment, createdAt])
-        return [null, x]
+        await db.query("insert into Reviews(customer_id, vendor_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, vid, score, comment, createdAt])
+        return null
     }catch (err){
-        return [err, null]
+        return err
     }
     
 }
