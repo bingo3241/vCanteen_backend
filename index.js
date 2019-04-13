@@ -505,8 +505,10 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
 
 app.post("/v2/orders/customer/rating", async (req, res) => {
   let {customerId, vendorId, score, comment} = req.body
-  
-  let [err, result] = vendorsModel.reviewVendor(customerId, vendorId, score, comment)
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
+  let err = vendorsModel.reviewVendor(customerId, vendorId, score, comment, currentDate)
   if (err) {
     res.status(400).send()
   }else res.status(200).send()
