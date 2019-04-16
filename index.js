@@ -503,15 +503,36 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   
 })
 
+
+
+//--------------------------------------------------------------------------------V2---------------------------------------------------------------------------------
 app.post("/v2/orders/customer/rating", async (req, res) => {
-  let {customerId, vendorId, score, comment} = req.body
+  let {customerId, orderId, score, comment} = req.body
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   let currentDate = new Date(thistime)
-  let err = vendorsModel.reviewVendor(customerId, vendorId, score, comment, currentDate)
+  let err = customersModel.reviewVendor(customerId, orderId, score, comment, currentDate)
   if (err) {
     res.status(400).send()
   }else res.status(200).send()
+})
+
+app.get("/v2/orders/:vid/menu", async (req, res) => {                     
+  let vid = req.params.vid
+  let result = await ordersModel.getVendorMenu(vid)
+  res.json(result)
+})
+
+app.get("/v2/menu-management/:vid/menu/:fid", async (req, res) => {
+  res.json(await vendorsModel.getFoodById(req.params.fid))
+})
+
+app.get("/v2/settings/:vid/info/reviews", async (req,res) => {
+  res.json(await vendorsModel.getReview(req.params.vid))
+})
+
+app.get("/v2/settings/:vid/info", async (req, res) => {
+  res.json(await vendorsModel.getVendorInfoV2(req.params.vid))
 })
 
 function sendToFirebase(title, body, token) {

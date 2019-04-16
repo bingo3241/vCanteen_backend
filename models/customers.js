@@ -54,6 +54,15 @@ async function getApprovedVendor() { //id name, number, image, status
     let result = db.query("select vendor_id as vendorId, restaurant_name as restaurantName, restaurant_number as restaurantNumber, vendor_image as vendorImage, vendor_status as vendorStatus from Vendors where admin_permission = 'APPROVED'")
     return result
 }
+async function reviewVendor(cid, oid, score, comment, createdAt) {
+    try {
+        await db.query("insert into Reviews(customer_id, order_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, oid, score, comment, createdAt])
+        return null
+    }catch (err){
+        return err
+    }
+    
+}
 
 module.exports = {
     getAll,
@@ -63,5 +72,6 @@ module.exports = {
     NormalAuth,
     insertFacebook,
     changePasswords,
-    getApprovedVendor
+    getApprovedVendor,
+    reviewVendor,
 }

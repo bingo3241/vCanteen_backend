@@ -33,10 +33,20 @@ function getInProgress(customerId) {
 }
 
 function getHistory(customerId) {
-  return db.query("SELECT Orders.order_id AS orderId , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
-                  "FROM Orders, Contains, Food, Vendors "+
-                  "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
-                  "ORDER BY Orders.order_id", [customerId])
+    // let histres =  db.query("SELECT Orders.order_id AS orderId , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+    //               "FROM Orders, Contains, Food, Vendors "+
+    //               "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
+    //               "ORDER BY Orders.order_id", [customerId])
+    let histres = db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at, r.created_at as reviewed_at from Orders o join Reviews r join Vendors v on o.order_id = r.order_id and v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') order by o.order_id", [customerId])
+    let finalres = []
+    histres.forEach(res => {
+        if (res.reviewed_at == null) {
+            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
+        }else {
+            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
+        }
+    })
+    return finalres
 }
 
 async function updateOrderStatusToCollected(id) {
@@ -161,6 +171,43 @@ async function getPaymentMethod (cid) {
     return response
 }
 
+async function getVendorMenuV2(vid) {
+    let minBasePrice = 999999999
+    let minMainPrice = 999999999
+    let minCombinationPrice = 0
+    let availist = []
+    let soldoutlist = []
+    let hasCombination = true
+    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
+    let combilist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
+    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.prepare_duration, c.catagory_name from Food f join Classifies cl join Catagories c on f.food_id = cl.food_id and cl.catagory_id = c.catagory_id where vendor_id = ? and food_type = 'alacarte'", [vid])
+    combilist.forEach(menu => {
+        if (menu.food_type === "COMBINATION_BASE") {
+            if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
+        }
+        if (menu.food_type === "COMBINATION_MAIN") {
+            if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
+        }
+    })
+    alaclist.forEach(food => {
+        const {food_id,food_name,food_price,catagory_name} = food
+        let timetakes = Math.ceil(food.prepare_duration/60)
+        if (food.food_status == "AVAILABLE") {
+          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,catagory:catagory_name,prepareDuration:timetakes})
+        }
+        if (food.food_status == "SOLD_OUT") {
+          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,catagory:catagory_name,prepareDuration:timetakes})
+        }
+    })    
+    minCombinationPrice = minBasePrice+minMainPrice
+    if (minBasePrice == 999999999 || minMainPrice == 999999999) {
+        minCombinationPrice = null
+        hasCombination = false
+    }
+    let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
+    return response
+}
+
 module.exports = {
   // getSaleRecord,
   getInProgress,
@@ -174,4 +221,5 @@ module.exports = {
   postNewOrder,
   getSaleRecords,
   getPaymentMethod,
+  getVendorMenuV2,
 }
