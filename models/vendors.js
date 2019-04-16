@@ -218,15 +218,28 @@ async function assignSlot(order_id,currentDate){
     return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
 }
 
-async function reviewVendor(cid, vid, score, comment, createdAt) {
-    try {
-        await db.query("insert into Reviews(customer_id, vendor_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, vid, score, comment, createdAt])
-        return null
-    }catch (err){
-        return err
-    }
-    
+async function getFoodById(fid) {
+    let res = await db.query("select * from Food where food_id = ?", [fid])
+    let catagory = await db.query("select catagory_name from Catagories c join Classifies cl on c.food_id = cl.food_id where cl.food_id = ?", [fid])
+    return {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "catagory": catagory[0]}
 }
+
+async function getReview(vid) {
+    let score = await db.query("select avg(r.score) from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
+    let reviewlist = await db.query("selct o.order_name, o.order_name_extra, r.score, r.comment, r.created_at from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
+    let resultlist = []
+    reviewlist.forEach(review => {
+        const date = new Date(review.created_at);
+        const month = date.toLocaleString('en-us', { month: 'long' });
+        const day = date.toLocaleString('en-us', { day: '2-digit' });
+        const year = date.toLocaleString('en-us', { year: 'numeric' });
+        let newdate = (month+" "+day+", "+year);
+        resultlist.push({"orderName": review.order_name, "orderNameExtra": review.order_name_extra, "score": review.score, "comment": review.comment, "createdAt": newdate})
+    })
+    return {"vendorScore": score, "reviewList": resultlist}
+}
+
+
 
 module.exports = {
     getAll,
@@ -249,5 +262,7 @@ module.exports = {
     editMenuStatus,
     assignSlot,
     changePasswords,
-    reviewVendor,
+    getFoodById,
+    getReview,
+    
 }
