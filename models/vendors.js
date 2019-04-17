@@ -275,8 +275,9 @@ module.exports = {
     editMenuStatus,
     assignSlot,
     changePasswords,
+    reviewVendor,
     getFoodById,
     getReview,
     getVendorInfoV2,
-    
+
 }
