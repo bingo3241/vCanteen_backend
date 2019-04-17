@@ -245,6 +245,11 @@ async function closeVendor(vendor_id){
     }
 }
 
+async function getToken(vendor_id){
+    let x = await db.query('SELECT DISTINCT token_firebase from Customers NATURAL JOIN Orders WHERE vendor_id =?', [vendor_id])
+    return x
+}
+
 module.exports = {
     getAll,
     get,
@@ -269,5 +274,6 @@ module.exports = {
     getAccountType,
     insertFacebook,
     insertFirebaseToken,
-    closeVendor
+    closeVendor,
+    getToken
 }
