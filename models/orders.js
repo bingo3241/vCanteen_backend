@@ -33,20 +33,11 @@ function getInProgress(customerId) {
 }
 
 function getHistory(customerId) {
-    // let histres =  db.query("SELECT Orders.order_id AS orderId , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
-    //               "FROM Orders, Contains, Food, Vendors "+
-    //               "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
-    //               "ORDER BY Orders.order_id", [customerId])
-    let histres = db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at, r.created_at as reviewed_at from Orders o join Reviews r join Vendors v on o.order_id = r.order_id and v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') order by o.order_id", [customerId])
-    let finalres = []
-    histres.forEach(res => {
-        if (res.reviewed_at == null) {
-            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
-        }else {
-            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
-        }
-    })
-    return finalres
+  return db.query("SELECT Orders.order_id AS orderId , Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Vendors.restaurant_number AS restaurantNumber, Orders.order_status AS orderStatus,  DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+                "FROM Orders, Contains, Food, Vendors "+
+                "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'CANCELLED' OR Orders.order_status = 'TIMEOUT' OR Orders.order_status = 'COLLECTED') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
+                "ORDER BY Orders.order_id", [customerId])
+    
 }
 
 async function updateOrderStatusToCollected(id) {
@@ -208,6 +199,31 @@ async function getVendorMenuV2(vid) {
     return response
 }
 
+function getInProgressV2(customerId) {
+    let inproglist = db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+                    "FROM Orders, Contains, Food, Vendors "+
+                    "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
+                    "ORDER BY Orders.order_id", [customerId])
+    let res = []
+    inproglist.forEach(order => {
+        res.push({"orderId": order.orderId, "orderName": order.orderName, "orderNameExtra": order.orderNameExtra, "orderPrice": order.orderPrice, "restaurantName": order.restaurantName, "orderStatus": order.orderStatus, "createdAt" : order.createdAt, "orderEstimatedTime": (order.order_prepare_duration + order.vendor_queuing_time)/60})
+    }) 
+    return res             
+}
+  
+function getHistoryV2(customerId) {
+    let histres = db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at, r.created_at as reviewed_at from Orders o join Reviews r join Vendors v on o.order_id = r.order_id and v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') order by o.order_id", [customerId])
+    let finalres = []
+    histres.forEach(res => {
+        if (res.reviewed_at == null) {
+            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
+        }else {
+            finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNmaeExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
+        }
+    })
+    return finalres
+}
+
 module.exports = {
   // getSaleRecord,
   getInProgress,
@@ -222,4 +238,6 @@ module.exports = {
   getSaleRecords,
   getPaymentMethod,
   getVendorMenuV2,
+  getInProgressV2,
+  getHistoryV2,
 }

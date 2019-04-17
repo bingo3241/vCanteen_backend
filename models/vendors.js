@@ -218,7 +218,7 @@ async function assignSlot(order_id,currentDate){
     return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
 }
 
-async function getFoodById(fid) {
+async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
     let catagory = await db.query("select catagory_name from Catagories c join Classifies cl on c.food_id = cl.food_id where cl.food_id = ?", [fid])
     let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "catagory": catagory[0]}
@@ -226,7 +226,7 @@ async function getFoodById(fid) {
     return resp
 }
 
-async function getReview(vid) {
+async function getReviewV2(vid) {
     let score = await db.query("select avg(r.score) as score from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
     let reviewlist = await db.query("selct o.order_name, o.order_name_extra, r.score, r.comment, r.created_at from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
     let resultlist = []
@@ -275,9 +275,8 @@ module.exports = {
     editMenuStatus,
     assignSlot,
     changePasswords,
-    reviewVendor,
-    getFoodById,
-    getReview,
+    getFoodByIdV2,
+    getReviewV2,
     getVendorInfoV2,
   
 }

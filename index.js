@@ -511,7 +511,7 @@ app.post("/v2/orders/customer/rating", async (req, res) => {
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   let currentDate = new Date(thistime)
-  let err = customersModel.reviewVendor(customerId, orderId, score, comment, currentDate)
+  let err = customersModel.reviewVendorV2(customerId, orderId, score, comment, currentDate)
   if (err) {
     res.status(400).send()
   }else res.status(200).send()
@@ -519,20 +519,24 @@ app.post("/v2/orders/customer/rating", async (req, res) => {
 
 app.get("/v2/orders/:vid/menu", async (req, res) => {                     
   let vid = req.params.vid
-  let result = await ordersModel.getVendorMenu(vid)
+  let result = await ordersModel.getVendorMenuV2(vid)
   res.json(result)
 })
 
 app.get("/v2/menu-management/:vid/menu/:fid", async (req, res) => {
-  res.json(await vendorsModel.getFoodById(req.params.fid))
+  res.json(await vendorsModel.getFoodByIdV2(req.params.fid))
 })
 
 app.get("/v2/settings/:vid/info/reviews", async (req,res) => {
-  res.json(await vendorsModel.getReview(req.params.vid))
+  res.json(await vendorsModel.getReviewV2(req.params.vid))
 })
 
 app.get("/v2/settings/:vid/info", async (req, res) => {
   res.json(await vendorsModel.getVendorInfoV2(req.params.vid))
+})
+
+app.get("/v2/orders/customers/:cid/in-progress", async (req, res) => {
+  res.json(await ordersModel.getInProgressV2(req.params.cid))
 })
 
 function sendToFirebase(title, body, token) {

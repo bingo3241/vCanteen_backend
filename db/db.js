@@ -47,7 +47,7 @@ const mysqlServer = {
 
 const dbUser = 'root';
 const dbPassword = 'root';
-const db = 'vcanteen-db-v1';
+const db = 'vcanteen-db-v2';
 
 var pool = mysql.createPool({
   user: dbUser,
