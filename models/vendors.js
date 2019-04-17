@@ -218,6 +218,16 @@ async function assignSlot(order_id,currentDate){
     return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
 }
 
+async function reviewVendor(cid, vid, score, comment, createdAt) {
+    try {
+        await db.query("insert into Reviews(customer_id, vendor_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, vid, score, comment, createdAt])
+        return null
+    }catch (err){
+        return err
+    }
+    
+}
+
 module.exports = {
     getAll,
     get,
@@ -238,5 +248,6 @@ module.exports = {
     updateVendorStatus,
     editMenuStatus,
     assignSlot,
-    changePasswords
+    changePasswords,
+    reviewVendor,
 }

@@ -41,7 +41,7 @@ function getHistory(customerId) {
 
 async function updateOrderStatusToCollected(id) {
     try {
-        let result = await db.query("update Orders set order_status = 'COLLECTED' where order_id = ? and order_status = 'DONE'", [id])
+        let result = await db.query("update Orders set order_status = 'COLLECTED', was_at_slot_id = (select slot_id from Is_At where order_id =?) where order_id = ? and order_status = 'DONE'", [id, id])
         let del = await db.query("delete from Is_At where order_id = ?", [id])
         return [null, result]
     }
