@@ -562,7 +562,7 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
   x.forEach(id => {
     firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", id)
   }) 
-  let[err,result] = vendorsModel.closeVendor(vendor_id)
+  let[err,result] = await vendorsModel.closeVendor(vendor_id)
   if (err) {
     res.status(500).json(err)
   } else if (result.affectedRows == 0){

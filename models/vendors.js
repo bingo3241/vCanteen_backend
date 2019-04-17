@@ -247,6 +247,7 @@ async function closeVendor(vendor_id){
 
 async function getToken(vendor_id){
     let x = await db.query('SELECT DISTINCT token_firebase from Customers c JOIN Orders o on c.customer_id = o.customer_id WHERE vendor_id =?', [vendor_id])
+    console.log(x)
     return x
 }
 
