@@ -279,5 +279,5 @@ module.exports = {
     getFoodById,
     getReview,
     getVendorInfoV2,
-
+  
 }
