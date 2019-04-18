@@ -256,6 +256,17 @@ async function getVendorInfoV2(vid) {
     
 }
 
+async function verifyPinV2(vid, pin) {
+    let dbpin = await db.query("select four_digit_pin from Vendors where vendor_id = ?", [vid])
+    if (dbpin[0].four_digit_pin == pin) return true
+    else return false
+}
+
+async function editPinV2(vid, pin) {
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", {vid, pin})
+    return res
+}
+
 
 
 module.exports = {
@@ -282,5 +293,7 @@ module.exports = {
     getFoodByIdV2,
     getReviewV2,
     getVendorInfoV2,
+    verifyPinV2,
+    editPinV2,
   
 }

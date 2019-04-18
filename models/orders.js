@@ -175,7 +175,9 @@ async function getVendorMenuV2(vid) {
     let hasCombination = true
     let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
     let combilist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.prepare_duration, c.catagory_name from Food f join Classifies cl join Catagories c on f.food_id = cl.food_id and cl.catagory_id = c.catagory_id where vendor_id = ? and food_type = 'alacarte'", [vid])
+    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.prepare_duration, f.food_status, c.category_name from Food f join Classifies cl join Categories c on f.food_id = cl.food_id and cl.category_id = c.category_id where vendor_id = ? and food_type = 'alacarte'", [vid])
+    console.log(combilist)
+    console.log(alaclist)
     combilist.forEach(menu => {
         if (menu.food_type === "COMBINATION_BASE") {
             if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
@@ -185,13 +187,13 @@ async function getVendorMenuV2(vid) {
         }
     })
     alaclist.forEach(food => {
-        const {food_id,food_name,food_price,catagory_name} = food
+        const {food_id,food_name,food_price,category_name} = food
         let timetakes = Math.ceil(food.prepare_duration/60)
         if (food.food_status == "AVAILABLE") {
-          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,catagory:catagory_name,prepareDuration:timetakes})
+          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name,prepareDuration:timetakes})
         }
         if (food.food_status == "SOLD_OUT") {
-          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,catagory:catagory_name,prepareDuration:timetakes})
+          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name,prepareDuration:timetakes})
         }
     })    
     minCombinationPrice = minBasePrice+minMainPrice
