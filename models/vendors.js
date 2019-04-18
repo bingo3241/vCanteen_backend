@@ -251,6 +251,18 @@ async function getToken(vendor_id){
     return x
 }
 
+async function updateCancelReason(order_id,order_status,cancel_reason){
+    try{
+        let result = await db.query('UPDATE Orders SET order_status = ?, cancel_reason = ? WHERE order_id = ?' , 
+        [order_status,cancel_reason,order_id])
+        return [null,result]
+    } 
+    catch(err) {
+        return [err,null]
+    }
+}
+
+
 module.exports = {
     getAll,
     get,
@@ -276,5 +288,6 @@ module.exports = {
     insertFacebook,
     insertFirebaseToken,
     closeVendor,
-    getToken
+    getToken,
+    updateCancelReason
 }

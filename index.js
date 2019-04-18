@@ -14,6 +14,7 @@ const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
 const db = require('./db/db')
 const firebase = require('./db/firebase')
+const adminModel = require('./models/admin')
 
 
 const passwordModule = require('./helpers/password');
@@ -435,7 +436,7 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
     }
 })
   
-app.get("/v1/orders/:vid/menu", async (req, res) => {                     
+app.get("/v2/orders/:vid/menu", async (req, res) => {                     
   let vid = req.params.vid
   let result = await ordersModel.getVendorMenu(vid)
   res.json(result)
@@ -528,7 +529,8 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
       if(orderStatus != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
-        z = db.query("DELETE FROM Is_At WHERE order_id = ?", [order_id])        
+        await db.query("UPDATE Orders SET was_at_slot_id = (SELECT slot_id FROM Is_At WHERE order_id = ? ) WHERE order_id = ? ", [order_id,order_id])
+        await db.query("DELETE FROM Is_At WHERE order_id = ?", [order_id])       
       } 
     },50*1000)
     if (err) {
@@ -571,6 +573,76 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
     res.status(200).send()
   } 
 })
+
+app.get('/v2/customer-main/:customerId/home' , async(req,res) => {
+  let customer_id = req.params.customerId
+  let result = { customer: await customersModel.getCusInfo(customer_id), percentDensity: await customersModel.getDensity(),recommend: await customerModel.getRecommend()}
+  if(result.customer == false && result.percentDensity == false && result.recommend == false) {
+    res.status(404).send()
+  } else {
+    res.json(result)
+  }
+})
+
+app.get('/v2/orders/all-vendors' , async(req,res) => {
+  let result = await customersModel.getVendor()
+  if(result == false) {
+    res.status(404).send()
+  } else {
+    res.json(result)
+  }
+})
+
+
+
+app.put("/v2/admin-main/vendor/permission", async(req,res) => {
+      let vendor_id = req.body.vendorId
+      let admin_permission = req.body.adminPermission
+      let [err,result]= await adminModel.changeVendorPermission(vendor_id,admin_permission)
+      if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.json(result)
+      } 
+})
+
+app.get('/v2/admin-main/main' , async(req,res) => {
+  let result = await adminModel.getVendor()
+  if (result == false) {
+    res.status(404).send()
+  } else {
+    res.json({"vendorList": result})
+  }
+})
+
+app.get('/v2/orders/:orderId/cancellation-reason' , async(req,res) => {
+  let order_id = req.params.orderId
+  let result = await ordersModel.getCancelReason(order_id)
+  if (result == false) {
+    res.status(404).send()
+  } else {
+    res.json(result)
+  }
+})
+
+app.put("/v2/vendor-main/order/status", async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.order_status
+  let cancel_reason = req.body.cancelReason
+  let [err,result]= await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
+  if (err) {
+    res.status(500).json(err)
+  } else if (result.affectedRows == 0){
+    res.status(404).send()
+  }else {
+    res.json(result)
+  } 
+})
+
+
+
 
 
 let port = process.env.PORT;

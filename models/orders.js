@@ -67,9 +67,9 @@ async function getVendorMenu(vid) {
     let availist = []
     let soldoutlist = []
     let hasCombination = true
-    let vendor = await db.query("select restaurant_number as restaurantNumber, restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
+    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
     let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-    let foodlist = await db.query("select * from Food where vendor_id = ? and food_type = 'alacarte'", [vid])
+    let foodlist = await db.query("select * from Categories JOIN Classifies on Categories.category_id = Classifies.category_id JOIN Food on Food.food_id = Classifies.food_id   where vendor_id = ? and food_type = 'alacarte'", [vid])
     menulist.forEach(menu => {
         if (menu.food_type === "COMBINATION_BASE") {
             if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
@@ -79,22 +79,24 @@ async function getVendorMenu(vid) {
         }
     })
     foodlist.forEach(food => {
-        const {food_id,food_name,food_price} = food
+        const {food_id,food_name,food_price,category_name} = food
         if (food.food_status == "AVAILABLE") {
-          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
+          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,Category:category_name})
         }
         if (food.food_status == "SOLD_OUT") {
-          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price})
-        }
-    })    
+          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price}) 
+        }      
     minCombinationPrice = minBasePrice+minMainPrice
-    if (minBasePrice == 999999999 || minMainPrice == 999999999) {
+        if (minBasePrice == 999999999 || minMainPrice == 999999999) {
         minCombinationPrice = null
         hasCombination = false
-    }
+        }
+    })
     let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
     return response
-}
+    }
+
+
 
 async function getFoodAndExtra(vid, fid) {
   let food = await db.query("select food_id as foodId, food_name as foodName, food_price as foodPrice from Food where food_id =?", [fid])
@@ -159,6 +161,11 @@ async function getPaymentMethod (cid) {
     return response
 }
 
+async function getCancelReason(order_id) {
+    let response = await db.query("select cancel_reason as cancel_reason from Orders where order_id = ?", [order_id])
+    return response
+}
+
 module.exports = {
   // getSaleRecord,
   getInProgress,
@@ -172,4 +179,5 @@ module.exports = {
   postNewOrder,
   getSaleRecords,
   getPaymentMethod,
+  getCancelReason
 }

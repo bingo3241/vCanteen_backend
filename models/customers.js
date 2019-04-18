@@ -72,6 +72,46 @@ async function getAccountType(email) {
     return result[0].account_type
 }
 
+async function getCusInfo(customer_id) {
+    let result = await db.query("SELECT firstname, lastname, email, customer_image as customerImage FROM Customer WHERE customer_id = ? ", [customer_id])
+    return result
+}
+
+async function getDensity() {
+    let result = await db.query("SELECT percent_density FROM CrowdEstimations c WHERE c.record_id = (SELECT MAX(c2.record_id) FROM CrowdEstimations c2) ")
+    return result
+}
+
+async function getRecommend() {
+    let x = await db.query("SELECT DISTINCT vendor_id as vendorId, food_image as foodImage, food_name as foodName FROM Food WHERE food_type = 'ALACARTE' ")
+    console.log(x)
+    console.log(x.length)
+    let y = Math.floor(Math.random() * x.length )
+    return x[y]
+}
+
+
+async function getVendor() {
+    let open = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus" +
+                    "FROM Vendors "+
+                    "WHERE admin_permission = 'APPROVED' AND vendor_status = 'OPEN' "+
+                    "ORDER BY vendor_id ASC")
+    let close = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus" +
+                    "FROM Vendors "+
+                    "WHERE admin_permission = 'APPROVED' AND vendor_status = 'CLOSED' "+
+                    "ORDER BY vendor_id ASC")
+    let x = []   
+    for (let i = 0; i<open.length; i++) {  
+            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where vendor_id = (select vendor_id from Orders where vendor_id = ?) AND order_status = 'COOKING'", [open[i].vendorId])
+            x.push({"vendorId": open[i].vendorId, "restaurantName": open[i].restaurantName, "vendorImage": open[i].vendorImage, "queuingTime": Math.ceil(waittime[0].time/60)})
+    } 
+    x.push(close)
+    return x             
+}
+
+
+
+
 module.exports = {
     getAll,
     get,
@@ -82,5 +122,9 @@ module.exports = {
     insertFirebaseToken,
     changePasswords,
     getApprovedVendor,
-    getAccountType
+    getAccountType,
+    getCusInfo,
+    getDensity,
+    getRecommend,
+    getVendor
 }
