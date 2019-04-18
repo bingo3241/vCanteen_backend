@@ -218,6 +218,9 @@ async function assignSlot(order_id,currentDate){
     return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
 }
 
+//-----------------------------------------------------------------------V2------------------------------------------------------------------------------------------
+
+
 async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
     res = res[0]
@@ -263,8 +266,28 @@ async function verifyPinV2(vid, pin) {
 }
 
 async function editPinV2(vid, pin) {
-    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", {vid, pin})
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [vid, pin])
     return res
+}
+
+async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    try{
+    let res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
+    await db.query("update Categories set category_name = ? where category_id = (select catergory_id from Classifies where food_id = ?)", [catname, fid])
+    return null
+    } catch (err) {
+        return err
+    }
+}
+
+async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    try {
+        let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, preapre_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+        await db.query("insert into Classifies (food_id, category_id) values (?, (select category_id from Categories where category_name =?))", [res.insertId, catname])
+        return res
+    } catch (err) {
+        return err
+    }
 }
 
 
@@ -295,5 +318,7 @@ module.exports = {
     getVendorInfoV2,
     verifyPinV2,
     editPinV2,
+    editMenuV2,
+    addMenuV2,
   
 }
