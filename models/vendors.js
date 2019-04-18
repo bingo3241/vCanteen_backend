@@ -45,9 +45,9 @@ async function changePasswords(pwd,vendor_id) {
     }
 }
 
-async function updateOrderStatus(order_status,order_id) {
+async function updateOrderStatus(order_status,order_id, cancelReason) {
     try{
-        let result = await db.query('UPDATE Orders SET order_status = ? WHERE order_id = ?', [order_status,order_id])
+        let result = await db.query('UPDATE Orders SET order_status = ?, cancel_reason = ? WHERE order_id = ?', [order_status, cancelReason, order_id])
         return [null,result]
     } 
     catch(err) {
@@ -215,8 +215,13 @@ async function assignSlot(order_id,currentDate){
     }while(y.includes(z)){
         z = Math.floor(Math.random()*500) + 1
     }
-    return await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
+    let res = await db.query('INSERT INTO Is_At(order_id,done_time,slot_id) values(?, ?, ?)' , [order_id,currentDate,z])
+    await db.query("update Orders set was_at_slot_id = ? where order_id = ?", [z, order_id])
+    return res
 }
+
+//-----------------------------------------------------------------------V2------------------------------------------------------------------------------------------
+
 
 async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
@@ -263,8 +268,37 @@ async function verifyPinV2(vid, pin) {
 }
 
 async function editPinV2(vid, pin) {
-    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", {vid, pin})
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [vid, pin])
     return res
+}
+
+async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    try{
+    let res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
+    await db.query("update Categories set category_name = ? where category_id = (select catergory_id from Classifies where food_id = ?)", [catname, fid])
+    return null
+    } catch (err) {
+        return err
+    }
+}
+
+async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    try {
+        let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, preapre_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+        await db.query("insert into Classifies (food_id, category_id) values (?, (select category_id from Categories where category_name =?))", [res.insertId, catname])
+        return res
+    } catch (err) {
+        return err
+    }
+}
+
+async function editProfileV2(vid, rname, email) {
+    let result = db.query("update Vendors set restaurant_name = ?, email = ? where vendor_id = ?", [rname, email, vid])
+    return result
+}
+async function editProfileImgV2(vid, img) {
+    let result = db.query("update Vendors set vendor_image = ? where vendor_id = ?", [img, vid])
+    return result
 }
 
 
@@ -295,5 +329,9 @@ module.exports = {
     getVendorInfoV2,
     verifyPinV2,
     editPinV2,
+    editMenuV2,
+    addMenuV2,
+    editProfileV2,
+    editProfileImgV2,
   
 }

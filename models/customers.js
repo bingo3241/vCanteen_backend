@@ -54,6 +54,7 @@ async function getApprovedVendor() { //id name, number, image, status
     let result = db.query("select vendor_id as vendorId, restaurant_name as restaurantName, restaurant_number as restaurantNumber, vendor_image as vendorImage, vendor_status as vendorStatus from Vendors where admin_permission = 'APPROVED'")
     return result
 }
+
 async function reviewVendorV2(cid, oid, score, comment, createdAt) {
     try {
         await db.query("insert into Reviews(customer_id, order_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, oid, score, comment, createdAt])
@@ -62,6 +63,11 @@ async function reviewVendorV2(cid, oid, score, comment, createdAt) {
         return err
     }
     
+}
+
+async function editProfileV2(cid, fname, lname, email, img) {
+    let result = await db.query("update Customers set firstname = ?, lastname = ?, email = ?, customer_image = ? where customer_id = ?", [fname, lname, email, img, cid])
+    return result
 }
 
 module.exports = {
@@ -74,4 +80,5 @@ module.exports = {
     changePasswords,
     getApprovedVendor,
     reviewVendorV2,
+    editProfileV2,
 }

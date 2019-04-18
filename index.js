@@ -559,8 +559,99 @@ app.put("/v2/user-authentication/verify/pin", async (req, res) => {
 app.put("/v2/user-authentication/vendor/pin", async (req, res) => {
   let {vendorId, fourDigitPin} = req.body
   let result = await vendorsModel.editPinV2(vendorId, fourDigitPin)
-  if (result.affectedRows == 0) res.status(200).send()
+  if (result.affectedRows == 1) res.status(200).send()
   else res.status(400).send()
+})
+
+app.put("/v2/menu-management/menu", async (req, res) => {
+  let {vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, catagoryName} = req.body
+  let err = await vendorsModel.editMenuV2(vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, catagoryName, prepareDuration)
+  if(err) res.json(err)
+  else res.status(200).send()
+})
+
+app.post("/v2/menu-management/menu", async (req, res) => {
+  let {vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, catagoryName} = req.body
+  let [result, err] = await vendorsModel.editMenuV2(vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, catagoryName, prepareDuration)
+  if (err) res.status(400).send()
+  else res.json(result.insertId)
+})
+
+app.put("/v2/profile-management/customer/profile", async (req, res) => {
+  let {customerId, firstname, lastname, email, profileImage} = req.body
+  let result = await customersModel.editProfileV2(customerId, firstname, lastname, email, profileImage)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put("/v2/profile-management/vendor/profile", async (req, res) => {
+  let {vendorId, restaurantName, email} = req.body
+  let result = await vendorsModel.editProfileV2(vendorId, restaurantName, email)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put("/v2/profile-management/vendor/image", async (req, res) => {
+  let {vendorId, vendorImage} = req.body
+  let result = await vendorsModel.editProfileImgV2(vendorId, vendorImage)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put('/v2/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  let cancelReason = req.body.cancelReason
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
+  let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
+  let cid = cidA[0].customer_id
+  let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = tokenA[0].token_firebase
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id, currentDate)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    setTimeout(async () => {
+      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
+    },15000)
+    setTimeout(async () => {
+      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      console.log(orderStatus)
+      let status = orderStatus[0].order_status
+      console.log(status)
+      console.log(status == "COLLECTED")
+      if(status != "COLLECTED"){
+        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
+        x = sendToFirebase("15min leaw ai sus", "time out", token)
+        
+      } 
+    },30000)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      } 
+  }
+
+  if(order_status == "CANCELLED"){
+    x = sendToFirebase("noti", "order cancelled", token)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id, cancelReason)
+    if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      res.status(200).send()
+    } 
+  }
+  
+})
+
+app.get("/v2/orders/:oid/slot-old", async (req, res) => {
+  res.json(await ordersModel.getSlotIdV2(req.params.oid))
 })
 
 function sendToFirebase(title, body, token) {

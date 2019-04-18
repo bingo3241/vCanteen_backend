@@ -235,6 +235,11 @@ async function getHistoryV2(customerId) {
     return finalres
 }
 
+async function getSlotIdV2(oid) {
+    let res = await db.query("select was_at_slot_id from Orders where order_id = ?", [oid])
+    return res
+}
+
 module.exports = {
   // getSaleRecord,
   getInProgress,
@@ -251,4 +256,5 @@ module.exports = {
   getVendorMenuV2,
   getInProgressV2,
   getHistoryV2,
+  getSlotIdV2,
 }
