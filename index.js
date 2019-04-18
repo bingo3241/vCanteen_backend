@@ -431,9 +431,11 @@ app.put("/v1/orders/:oid/status/collected", async (req, res) => {
 })
 
 app.post("/v1/orders/new", async (req, res) => {
-  let { orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice } = req.body
-  //let foods = req.body.foods
-  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice)
+  let { orderList, customerId, vendorId, customerMoneyAccountId, totalPrice } = req.body
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  now = new Date(thistime)
+  let err = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
   if (err) res.status(400).send()
   else res.status(200).send()
 
@@ -471,15 +473,19 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
     setTimeout(async () => {
       x = sendToFirebase("10min leaw ai sus", "collect pls", token)
-    },5000)
+    },15000)
     setTimeout(async () => {
       let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
-      if(orderStatus != "COLLECTED"){
+      console.log(orderStatus)
+      let status = orderStatus[0].order_status
+      console.log(status)
+      console.log(status == "COLLECTED")
+      if(status != "COLLECTED"){
         vendorsModel.updateOrderStatus("TIMEOUT", order_id)
         x = sendToFirebase("15min leaw ai sus", "time out", token)
         
       } 
-    },10000)
+    },30000)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
@@ -527,16 +533,34 @@ app.get("/v2/menu-management/:vid/menu/:fid", async (req, res) => {
   res.json(await vendorsModel.getFoodByIdV2(req.params.fid))
 })
 
-app.get("/v2/settings/:vid/info/reviews", async (req,res) => {
+app.get("/v2/settings/:vid/info/reviews", async (req,res) => {   //tested
   res.json(await vendorsModel.getReviewV2(req.params.vid))
 })
 
-app.get("/v2/settings/:vid/info", async (req, res) => {
+app.get("/v2/settings/:vid/info", async (req, res) => {   //tesed
   res.json(await vendorsModel.getVendorInfoV2(req.params.vid))
 })
 
 app.get("/v2/orders/customers/:cid/in-progress", async (req, res) => {
   res.json(await ordersModel.getInProgressV2(req.params.cid))
+})
+app.get('/v2/orders/customers/:customerId/history', async (req, res) => {
+  var customerId = req.params.customerId;
+  res.status(200).json(await ordersModel.getHistoryV2(customerId))
+})
+
+app.put("/v2/user-authentication/verify/pin", async (req, res) => {
+  let {vendorId, fourDigitPin} = req.body
+  let result = await vendorsModel.verifyPinV2(vendorId, fourDigitPin)
+  if (result) res.status(200).send()
+  else res.status(404).send()
+})
+
+app.put("/v2/user-authentication/vendor/pin", async (req, res) => {
+  let {vendorId, fourDigitPin} = req.body
+  let result = await vendorsModel.editPinV2(vendorId, fourDigitPin)
+  if (result.affectedRows == 0) res.status(200).send()
+  else res.status(400).send()
 })
 
 function sendToFirebase(title, body, token) {

@@ -220,36 +220,51 @@ async function assignSlot(order_id,currentDate){
 
 async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
-    let catagory = await db.query("select catagory_name from Catagories c join Classifies cl on c.food_id = cl.food_id where cl.food_id = ?", [fid])
-    let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "catagory": catagory[0]}
-    console.log(resp)
+    res = res[0]
+    let category = await db.query("select c.category_name from Categories c join Classifies cl on c.category_id = cl.category_id where cl.food_id = ?", [fid])
+    let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "category": category[0]}
+    //console.log(category)
     return resp
 }
 
 async function getReviewV2(vid) {
     let score = await db.query("select avg(r.score) as score from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
-    let reviewlist = await db.query("selct o.order_name, o.order_name_extra, r.score, r.comment, r.created_at from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
+    let reviewlist = await db.query("select o.order_name, o.order_name_extra, r.score, r.comment, r.created_at from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
     let resultlist = []
+    //console.log(score)
+    //console.log(reviewlist)
     reviewlist.forEach(review => {
         const date = new Date(review.created_at);
         const month = date.toLocaleString('en-us', { month: 'long' });
         const day = date.toLocaleString('en-us', { day: '2-digit' });
         const year = date.toLocaleString('en-us', { year: 'numeric' });
         let newdate = (month+" "+day+", "+year);
-        resultlist.push({"orderName": review.order_name, "orderNameExtra": review.order_name_extra, "score": review.score.score[0], "comment": review.comment, "createdAt": newdate})
+        resultlist.push({"orderName": review.order_name, "orderNameExtra": review.order_name_extra, "score": review.score, "comment": review.comment, "createdAt": newdate})
     })
-    let res = {"vendorScore": score[0], "reviewList": resultlist}
+    let res = {"vendorScore": score[0].score, "reviewList": resultlist}
     console.log(res)
     return res
 }
 async function getVendorInfoV2(vid) {
-    let vacc = await db.query("select vm.service_provider from Vendor_Links vl join VendorMoneyAccounts vm on vl.money_account_id = vm.money_account_id and vl.vendor_id = ?", [vid])
+    let vacc = await db.query("select vm.service_provider as account from Vendor_Links vl join VendorMoneyAccounts vm on vl.money_account_id = vm.money_account_id and vl.vendor_id = ?", [vid])
     let vinfo = await db.query("select restaurant_name, vendor_status, email, vendor_image, account_type from Vendors where vendor_id = ?", [vid])
     let score = await db.query("select avg(r.score)as score from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
-    let res = {"vendorInfo": [{"vendorName": vinfo.restaurant_name, "vendorStatus": vinfo.vendo_status, "vendorEmail": vinfo.email, "vendorImage": vinfo.vendor_image, "accountType": vinfo.account_type, "score": score.score[0]}], "vendorPaymentMethod": vacc}
+    console.log(vinfo)
+    let res = {"vendorInfo": [{"vendorName": vinfo[0].restaurant_name, "vendorStatus": vinfo[0].vendor_status, "vendorEmail": vinfo[0].email, "vendorImage": vinfo[0].vendor_image, "accountType": vinfo[0].account_type, "score": score[0].score}], "vendorPaymentMethod": vacc}
     console.log(res)
     return res
     
+}
+
+async function verifyPinV2(vid, pin) {
+    let dbpin = await db.query("select four_digit_pin from Vendors where vendor_id = ?", [vid])
+    if (dbpin[0].four_digit_pin == pin) return true
+    else return false
+}
+
+async function editPinV2(vid, pin) {
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", {vid, pin})
+    return res
 }
 
 
@@ -278,5 +293,7 @@ module.exports = {
     getFoodByIdV2,
     getReviewV2,
     getVendorInfoV2,
+    verifyPinV2,
+    editPinV2,
   
 }
