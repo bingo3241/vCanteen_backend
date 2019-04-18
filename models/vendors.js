@@ -246,11 +246,11 @@ async function getReviewV2(vid) {
     return res
 }
 async function getVendorInfoV2(vid) {
-    let vacc = await db.query("select vm.service_provider from Vendor_Links vl join VendorMoneyAccounts vm on vl.money_account_id = vm.money_account_id and vl.vendor_id = ?", [vid])
+    let vacc = await db.query("select vm.service_provider as account from Vendor_Links vl join VendorMoneyAccounts vm on vl.money_account_id = vm.money_account_id and vl.vendor_id = ?", [vid])
     let vinfo = await db.query("select restaurant_name, vendor_status, email, vendor_image, account_type from Vendors where vendor_id = ?", [vid])
     let score = await db.query("select avg(r.score)as score from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
     console.log(vinfo)
-    let res = {"vendorInfo": [{"vendorName": vinfo[0].restaurant_name, "vendorStatus": vinfo[0].vendo_status, "vendorEmail": vinfo[0].email, "vendorImage": vinfo[0].vendor_image, "accountType": vinfo[0].account_type, "score": score[0].score}], "vendorPaymentMethod": vacc}
+    let res = {"vendorInfo": [{"vendorName": vinfo[0].restaurant_name, "vendorStatus": vinfo[0].vendor_status, "vendorEmail": vinfo[0].email, "vendorImage": vinfo[0].vendor_image, "accountType": vinfo[0].account_type, "score": score[0].score}], "vendorPaymentMethod": vacc}
     console.log(res)
     return res
     
