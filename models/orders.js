@@ -131,28 +131,32 @@ async function postNewOrder(orderList, customerId, vendorId, createdAt, customer
     let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
     custAcc[0].balance -= totalPrice
     vendorAcc[0].balance += totalPrice
-    let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
-    let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
+    await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
     let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
-    let result = []
     await orderList.forEach(async order => {
         let fids = []
+        let esttime = 0
         let {orderPrice, orderName, orderNameExtra, foodList} = order
         foodList.forEach(food => {
             fids.push(food.foodId)
         })
-        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, createdAt, vendorId, transacResult.insertId])
+        for (let i = 0; i<foodList.length;i++)  {
+            let time = await db.query("select prepare_duration from Food where food_id =?", [foodList[i].foodId])
+            esttime += time[0].prepare_duration
+            console.log("time = "+time+" est = "+esttime)
+        }
+        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id, order_prepare_duration) values (?, ?, 'COOKING', ?, ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, createdAt, vendorId, transacResult.insertId, esttime])
         let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
-        await result.push(returnres)
-        console.log(result)
+        console.log(returnres)
         fids.forEach(fid => {
-            let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
+            db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
       
     })
-    return [null, result]
+    return null
     } catch (err){
-        return [err, null]
+        return err
     }
 }
 
@@ -205,9 +209,13 @@ async function getInProgressV2(customerId) {
                     "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
                     "ORDER BY Orders.order_id", [customerId])
     let res = []
-    inproglist.forEach(order => {
-        res.push({"orderId": order.orderId, "orderName": order.orderName, "orderNameExtra": order.orderNameExtra, "orderPrice": order.orderPrice, "restaurantName": order.restaurantName, "orderStatus": order.orderStatus, "createdAt" : order.createdAt, "orderEstimatedTime": Math.ceil(order.order_prepare_duration + order.vendor_queuing_time)/60})
-    }) 
+    for (let i = 0; i<inproglist.length; i++) {
+        if (inproglist[i].orderStatus == "COOKING") {
+            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where order_id <= ?", [inproglist[i].orderId])
+            res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(waittime[0].time/60)})
+
+        }else res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": 0})
+    }
     return res             
 }
   
