@@ -226,7 +226,7 @@ async function assignSlot(order_id,currentDate){
 async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
     res = res[0]
-    let category = await db.query("select c.category_name from Categories c join Classifies cl on c.category_id = cl.category_id where cl.food_id = ?", [fid])
+    let category = await db.query("select category_name from Classifies where food_id = ?", [fid])
     let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "category": category[0]}
     //console.log(category)
     return resp
@@ -254,9 +254,7 @@ async function getVendorInfoV2(vid) {
     let vacc = await db.query("select vm.service_provider as account from Vendor_Links vl join VendorMoneyAccounts vm on vl.money_account_id = vm.money_account_id and vl.vendor_id = ?", [vid])
     let vinfo = await db.query("select restaurant_name, vendor_status, email, vendor_image, account_type from Vendors where vendor_id = ?", [vid])
     let score = await db.query("select avg(r.score)as score from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?", [vid])
-    console.log(vinfo)
     let res = {"vendorInfo": [{"vendorName": vinfo[0].restaurant_name, "vendorStatus": vinfo[0].vendor_status, "vendorEmail": vinfo[0].email, "vendorImage": vinfo[0].vendor_image, "accountType": vinfo[0].account_type, "score": score[0].score}], "vendorPaymentMethod": vacc}
-    console.log(res)
     return res
     
 }
@@ -268,14 +266,14 @@ async function verifyPinV2(vid, pin) {
 }
 
 async function editPinV2(vid, pin) {
-    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [vid, pin])
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [pin, vid])
     return res
 }
 
 async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
     try{
     let res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
-    await db.query("update Categories set category_name = ? where category_id = (select catergory_id from Classifies where food_id = ?)", [catname, fid])
+    await db.query("update Classifies set category_name = ? where food_id = ?)", [catname, fid])
     return null
     } catch (err) {
         return err
@@ -285,7 +283,7 @@ async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname
 async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
     try {
         let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, preapre_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
-        await db.query("insert into Classifies (food_id, category_id) values (?, (select category_id from Categories where category_name =?))", [res.insertId, catname])
+        await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
         return res
     } catch (err) {
         return err
