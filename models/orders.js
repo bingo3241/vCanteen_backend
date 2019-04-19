@@ -1,4 +1,5 @@
 const db = require('../db/db');
+const _ = require("underscore")
 
 async function getSaleRecords(vendorId) {
     var output = new Object() 
@@ -206,15 +207,29 @@ async function getVendorMenuV2(vid) {
 }
 
 async function getInProgressV2(customerId) {
-    let inproglist = await db.query("SELECT Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+    let inproglist = await db.query("SELECT Orders.vendor_id as vendorId, Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
                     "FROM Orders, Contains, Food, Vendors "+
                     "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
                     "ORDER BY Orders.order_id", [customerId])
     let res = []
+    let waittime = await db.query("select order_prepare_duration, order_id, vendor_id from Orders where order_status = 'COOKING' and vendor_id in (select vendor_id from Orders where order_id in (?) order by order_id asc)", [inproglist.map(x => x.orderId)])
+    console.log(waittime)
+    vendorOfOrders = _.groupBy(waittime, "vendor_id")
+    for (let i in vendorOfOrders) {
+        let ac = 0
+        for (let j in vendorOfOrders[i]) {
+            vendorOfOrders[i][j].order_prepare_duration += ac
+            ac = vendorOfOrders[i][j].order_prepare_duration
+        }
+    }
+    orderProcessed = _.flatten(Object.values(vendorOfOrders))
+    console.log(orderProcessed)
+    orderInverseIndex = _.object(orderProcessed.map(i => i.order_id), orderProcessed)
+    console.log(orderInverseIndex)
     for (let i = 0; i<inproglist.length; i++) {
         if (inproglist[i].orderStatus == "COOKING") {
-            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where order_id <= ? and order_status = 'COOKING' and vendor_id = (select vendor_id from Orders where order_id = ?)", [inproglist[i].orderId, inproglist[i].orderId])
-            res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(waittime[0].time/60)})
+            let estTime = orderInverseIndex[inproglist[i].orderId].order_prepare_duration
+            res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(estTime/60)})
 
         }else res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": null})
     }
