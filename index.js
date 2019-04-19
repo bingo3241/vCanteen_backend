@@ -564,15 +564,15 @@ app.put("/v2/user-authentication/vendor/pin", async (req, res) => {
 })
 
 app.put("/v2/menu-management/menu", async (req, res) => {
-  let {vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, catagoryName} = req.body
-  let err = await vendorsModel.editMenuV2(vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, catagoryName, prepareDuration)
+  let {vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
+  let err = await vendorsModel.editMenuV2(vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, categoryName, prepareDuration)
   if(err) res.json(err)
   else res.status(200).send()
 })
 
 app.post("/v2/menu-management/menu", async (req, res) => {
-  let {vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, catagoryName} = req.body
-  let [result, err] = await vendorsModel.editMenuV2(vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, catagoryName, prepareDuration)
+  let {vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
+  let [result, err] = await vendorsModel.editMenuV2(vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, categoryName, prepareDuration)
   if (err) res.status(400).send()
   else res.json(result.insertId)
 })
