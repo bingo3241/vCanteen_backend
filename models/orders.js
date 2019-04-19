@@ -128,12 +128,14 @@ async function getBaseMainExtraList(vid) {
 
 async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
     try {
-    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
-    let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
-    custAcc[0].balance -= totalPrice
-    vendorAcc[0].balance += totalPrice
-    await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
-    await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId, vm.account_number from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
+    let custAcc = await db.query("select balance, money_account_id as moneyAccId, account_number from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
+    if (vendorAcc[0].account_number != custAcc[0].account_number){
+        custAcc[0].balance -= totalPrice
+        vendorAcc[0].balance += totalPrice
+        db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
+        db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    }
     let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
     await orderList.forEach(async order => {
         let fids = []
