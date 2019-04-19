@@ -268,7 +268,7 @@ async function verifyPinV2(vid, pin) {
 }
 
 async function editPinV2(vid, pin) {
-    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [vid, pin])
+    let res = await db.query("update Vendors set four_digit_pin = ? where vendor_id = ?", [pin, vid])
     return res
 }
 

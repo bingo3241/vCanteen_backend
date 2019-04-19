@@ -537,26 +537,26 @@ app.get("/v2/settings/:vid/info/reviews", async (req,res) => {   //tested
   res.json(await vendorsModel.getReviewV2(req.params.vid))
 })
 
-app.get("/v2/settings/:vid/info", async (req, res) => {   //tesed
+app.get("/v2/settings/:vid/info", async (req, res) => {   //tested
   res.json(await vendorsModel.getVendorInfoV2(req.params.vid))
 })
 
-app.get("/v2/orders/customers/:cid/in-progress", async (req, res) => {
+app.get("/v2/orders/customers/:cid/in-progress", async (req, res) => { //tested
   res.json(await ordersModel.getInProgressV2(req.params.cid))
 })
-app.get('/v2/orders/customers/:customerId/history', async (req, res) => {
+app.get('/v2/orders/customers/:customerId/history', async (req, res) => { //tested
   var customerId = req.params.customerId;
   res.status(200).json(await ordersModel.getHistoryV2(customerId))
 })
 
-app.put("/v2/user-authentication/verify/pin", async (req, res) => {
+app.put("/v2/user-authentication/verify/pin", async (req, res) => { //tested
   let {vendorId, fourDigitPin} = req.body
   let result = await vendorsModel.verifyPinV2(vendorId, fourDigitPin)
   if (result) res.status(200).send()
   else res.status(404).send()
 })
 
-app.put("/v2/user-authentication/vendor/pin", async (req, res) => {
+app.put("/v2/user-authentication/vendor/pin", async (req, res) => { //tested
   let {vendorId, fourDigitPin} = req.body
   let result = await vendorsModel.editPinV2(vendorId, fourDigitPin)
   if (result.affectedRows == 1) res.status(200).send()

@@ -213,24 +213,27 @@ async function getInProgressV2(customerId) {
     let res = []
     for (let i = 0; i<inproglist.length; i++) {
         if (inproglist[i].orderStatus == "COOKING") {
-            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where order_id <= ? and vendor_id = (select vendor_id from Orders where order_id = ?)", [inproglist[i].orderId, inproglist[i].orderId])
+            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where order_id <= ? and order_status = 'COOKING' and vendor_id = (select vendor_id from Orders where order_id = ?)", [inproglist[i].orderId, inproglist[i].orderId])
             res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(waittime[0].time/60)})
 
         }else res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": null})
     }
+    
     return res             
 }
   
 async function getHistoryV2(customerId) {
     let histres = await db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at, r.created_at as reviewed_at from Orders o join Reviews r join Vendors v on o.order_id = r.order_id and v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') order by o.order_id", [customerId])
     let reviewres = await db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at from Orders o join Vendors v on v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') and o.order_id not in (select order_id from Reviews) order by o.order_id", [customerId])
-    console.log(histres)
     let finalres = []
     reviewres.forEach(res => {
         finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
     })
     histres.forEach(res => {
         finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
+    })
+    finalres.sort((a, b) => {
+        return b.orderId - a.orderId
     })
     return finalres
 }
