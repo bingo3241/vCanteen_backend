@@ -38,7 +38,7 @@ function decode(token) {
 }
 
 function isExpired(token) {
-    const {exp} = decode(token)
+    const {exp} = verify(token)
     if (Date.now() / 1000 > exp) {
         return true;
       }

@@ -37,7 +37,7 @@
 const SocksConnection = require('socksjs');
 const mysql = require('mysql2');
 const fixieUrl = process.env.FIXIE_SOCKS_HOST;
-//const fixieUrl = 'fixie:3Dlt60eCtxJ07Zw@speedway.usefixie.com:1080';
+// const fixieUrl = 'fixie:3Dlt60eCtxJ07Zw@speedway.usefixie.com:1080';
 const fixieValues = fixieUrl.split(new RegExp('[/(:\\/@)/]+'));
 
 const mysqlServer = {
@@ -47,7 +47,7 @@ const mysqlServer = {
 
 const dbUser = 'root';
 const dbPassword = 'root';
-const db = 'vcanteen-db-v1';
+const db = 'vcanteen-db-v2';
 
 var pool = mysql.createPool({
   user: dbUser,
