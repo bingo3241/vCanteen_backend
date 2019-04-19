@@ -506,6 +506,7 @@ app.post("/testfirebase", async (req, res) => {
 app.put('/v1/vendor-main/order/status' , async(req,res) => {
   let order_id = req.body.orderId
   let order_status = req.body.orderStatus
+  let cancel_reason = req.body.cancelReason
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   let currentDate = new Date(thistime)
@@ -519,20 +520,20 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
     console.log(order_id)
-    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
-    },30*1000)
+    },10*1000)
     setTimeout(async () => {
       let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
       let orderStatus = orderStatusA[0].order_status
       if(orderStatus != "COLLECTED"){
-        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
+        await vendorsModel.updateCancelReason(order_id,"TIMEOUT",cancel_reason)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
         await db.query("UPDATE Orders SET was_at_slot_id = (SELECT slot_id FROM Is_At WHERE order_id = ? ) WHERE order_id = ? ", [order_id,order_id])
         await db.query("DELETE FROM Is_At WHERE order_id = ?", [order_id])       
       } 
-    },50*1000)
+    },20*1000)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
@@ -545,8 +546,8 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
   if(order_status == "CANCELLED"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
     console.log(order_id)
-    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id)
-    if (err) {
+    let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
+    if(err) {
       res.status(500).json(err)
     } else if (result.affectedRows == 0){
       res.status(404).send()
@@ -626,23 +627,6 @@ app.get('/v2/orders/:orderId/cancellation-reason' , async(req,res) => {
     res.json(result)
   }
 })
-
-app.put("/v2/vendor-main/order/status", async(req,res) => {
-  let order_id = req.body.orderId
-  let order_status = req.body.order_status
-  let cancel_reason = req.body.cancelReason
-  let [err,result]= await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
-  if (err) {
-    res.status(500).json(err)
-  } else if (result.affectedRows == 0){
-    res.status(404).send()
-  }else {
-    res.json(result)
-  } 
-})
-
-
-
 
 
 let port = process.env.PORT;
