@@ -50,6 +50,18 @@ async function insertFacebook(first_name, last_name, email, profile_url) {
     return await db.query("INSERT INTO Customers(account_type, firstname, lastname, customer_image, email) VALUES ('FACEBOOK', ?, ?, ?, ?) ", [first_name, last_name, profile_url, email])
 }
 
+async function insertNewCustomer(email, password, firstname, lastname, customer_image, account_type, firebase_token) {
+    try{
+        await db.query("INSERT INTO Customers(email, passwd, firstname, lastname, customer_image, account_type, firebase_token) VALUES (?,?,?,?,?,?,?) ", [email, password, firstname, lastname, customer_image, account_type, firebase_token])
+        console.log('New Customer Created: '+email)
+        return true
+    } 
+    catch(err) {
+        console.log('Creating New Customer Failed')
+        return false
+    }
+}
+
 async function updateFirebaseToken(email, token){
     try{
         let result = await db.query('UPDATE Customers SET token_firebase = ? WHERE email = ? ', [token, email])
@@ -150,6 +162,7 @@ module.exports = {
     isInDatabase,
     NormalAuth,
     insertFacebook,
+    insertNewCustomer,
     updateFirebaseToken,
     changePasswords,
     getApprovedVendor,
