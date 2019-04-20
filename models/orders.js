@@ -209,13 +209,12 @@ async function getVendorMenuV2(vid) {
 }
 
 async function getInProgressV2(customerId) {
-    let inproglist = await db.query("SELECT Orders.vendor_id as vendorId, Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+    let inproglist = await db.query("SELECT Orders.vendor_id as vendorId, Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
                     "FROM Orders, Contains, Food, Vendors "+
                     "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
                     "ORDER BY Orders.order_id", [customerId])
     let res = []
     let waittime = await db.query("select order_prepare_duration, order_id, vendor_id from Orders where order_status = 'COOKING' and vendor_id in (select vendor_id from Orders where order_id in (?) order by order_id asc)", [inproglist.map(x => x.orderId)])
-    console.log(waittime)
     vendorOfOrders = _.groupBy(waittime, "vendor_id")
     for (let i in vendorOfOrders) {
         let ac = 0
@@ -225,9 +224,7 @@ async function getInProgressV2(customerId) {
         }
     }
     orderProcessed = _.flatten(Object.values(vendorOfOrders))
-    console.log(orderProcessed)
     orderInverseIndex = _.object(orderProcessed.map(i => i.order_id), orderProcessed)
-    console.log(orderInverseIndex)
     for (let i = 0; i<inproglist.length; i++) {
         if (inproglist[i].orderStatus == "COOKING") {
             let estTime = orderInverseIndex[inproglist[i].orderId].order_prepare_duration
@@ -244,10 +241,10 @@ async function getHistoryV2(customerId) {
     let reviewres = await db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at from Orders o join Vendors v on v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') and o.order_id not in (select order_id from Reviews) order by o.order_id", [customerId])
     let finalres = []
     reviewres.forEach(res => {
-        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
+        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.order_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
     })
     histres.forEach(res => {
-        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
+        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.order_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
     })
     finalres.sort((a, b) => {
         return b.orderId - a.orderId
