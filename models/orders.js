@@ -127,7 +127,7 @@ async function getBaseMainExtraList(vid) {
   return response
 }
 
-async function postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice) {
+async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
     try {
     let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId, vm.account_number from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
     let custAcc = await db.query("select balance, money_account_id as moneyAccId, account_number from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
@@ -137,7 +137,7 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
         db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
         db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
     }
-    let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [currentDate, customerMoneyAccountId, vendorAcc[0].moneyAccId])
+    let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [createdAt, customerMoneyAccountId, vendorAcc[0].moneyAccId])
     await orderList.forEach(async order => {
         let fids = []
         let esttime = 0
@@ -150,12 +150,13 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
             esttime += time[0].prepare_duration
             console.log("time = "+time+" est = "+esttime)
         }
-        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id, order_prepare_duration) values (?, ?, 'COOKING', ?, ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, currentDate, vendorId, transacResult.insertId, esttime])
+        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id, order_prepare_duration) values (?, ?, 'COOKING', ?, ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, createdAt, vendorId, transacResult.insertId, esttime])
         let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
         console.log(returnres)
         fids.forEach(fid => {
             db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
+      
     })
     return null
     } catch (err){
