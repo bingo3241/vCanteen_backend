@@ -127,7 +127,7 @@ async function getBaseMainExtraList(vid) {
   return response
 }
 
-async function postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice) {
+async function postNewOrder(orderList, customerId, vendorId, createdAt, customerMoneyAccountId, totalPrice) {
     try {
     let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId, vm.account_number from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
     let custAcc = await db.query("select balance, money_account_id as moneyAccId, account_number from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
@@ -156,6 +156,7 @@ async function postNewOrder(orderList, customerId, vendorId, currentDate, custom
         fids.forEach(fid => {
             db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
+      
     })
     return null
     } catch (err){
