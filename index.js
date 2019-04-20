@@ -700,11 +700,15 @@ app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
 
 app.post('/v2/settings/customer/report', async (req,res) => {
   let {customerId, message} = req.body
-  console.log
-  let success = await customersModel.sendReport(customerId, message)
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
+  console.log('customerId: '+customerId+' created a report')
+  let success = await customersModel.sendReport(customerId, message, currentDate)
   if(success) {
     var customer_email = await customersModel.getCustomerEmail(customerId)
-    mailgun.mailReport(customer_email, message)
+    var customer_name = await customersModel.getCustomerFullname(customerId)
+    mailgun.mailReport('Customer', customer_name, customer_email, message, currentDate)
     res.status(200).send('Report sent')
   } else {
     res.status(500).send('Error')
@@ -713,10 +717,14 @@ app.post('/v2/settings/customer/report', async (req,res) => {
 
 app.post('/v2/settings/vendor/report', async (req,res) => {
   let {vendorId, message} = req.body
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
   let success = await vendorsModel.sendReport(vendorId, message)
   if(success) {
     var vendor_email = await vendorsModel.getVendorEmail(vendorId)
-    mailgun.mailReport(vendor_email, message)
+    var restaurant_name = await vendorsModel.getVendorName(vendorId)
+    mailgun.mailReport('Vendor', restaurant_name, vendor_email, message, currentDate)
     res.status(200).send('Report sent')
   } else {
     res.status(500).send('Error')

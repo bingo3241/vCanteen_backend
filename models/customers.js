@@ -18,6 +18,11 @@ async function getCustomerEmail(customer_id) {
     return temp[0].email;
 }
 
+async function getCustomerFullname(customer_id) {
+    var temp = await db.query("SELECT CONCAT(firstname, ' ', lastname) as fullname from Customers where customer_id = ?",[customer_id])
+    return temp[0].fullname
+}
+
 async function isInDatabase(email) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Customers WHERE email = ?', [email])
     if( temp[0].Count == 1 ){
@@ -77,10 +82,7 @@ async function getAccountType(email) {
     return result[0].account_type
 }
 
-async function sendReport(customer_id, message) {
-    let now = new Date()
-    let thistime = now.getTime()+7*60*60*1000
-    let currentDate = new Date(thistime)
+async function sendReport(customer_id, message, currentDate) {
     try {
         await db.query("INSERT INTO CustomerReports(created_at, customer_id, message) "+
                  "VALUES(?, ?, ?)", [currentDate, customer_id, message])
@@ -128,6 +130,7 @@ module.exports = {
     get,
     getCustomerID,
     getCustomerEmail,
+    getCustomerFullname,
     isInDatabase,
     NormalAuth,
     insertFacebook,

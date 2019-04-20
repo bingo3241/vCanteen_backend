@@ -18,6 +18,11 @@ async function getVendorEmail(vendor_id) {
     return temp[0].email;
 }
 
+async function getVendorName(vendor_id) {
+    var temp = await db.query("SELECT restaurant_name FROM Vendors where vendor_id = ?", [vendor_id])
+    return temp[0].restaurant_name
+}
+
 async function isInDatabase(email) {
     console.log('Input Email: '+email)
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Vendors WHERE email = ?', [email])
@@ -283,6 +288,7 @@ module.exports = {
     get,
     getVendorID,
     getVendorEmail,
+    getVendorName,
     isInDatabase,
     NormalAuth,
     updateOrderStatus,

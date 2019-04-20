@@ -21,16 +21,15 @@ function mailNewPassword(password, email) {
     });
 }
 
-function mailReport(sender_email, message) {
+function mailReport(role, name, sender_email, message, created_at) {
     var API_KEY = process.env.MAILGUN_API_KEY;
     var DOMAIN = process.env.MAILGUN_DOMAIN;
     var mailgun = require('mailgun-js')({apiKey: API_KEY, domain: DOMAIN});
-
     const data = {
     from: sender_email,
     to: 'isezinfo@gmail.com',
-    subject: 'New Report From User',
-    text: message
+    subject: 'New Report From vCanteen',
+    text: "User type: "+role+"\nDatetime: "+created_at+"\nName: "+name+"\nMessage: "+message
     };
 
     mailgun.messages().send(data, (error, body) => {
