@@ -177,9 +177,9 @@ async function getVendorMenuV2(vid) {
     let availist = []
     let soldoutlist = []
     let hasCombination = true
-    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
-    let combilist = await db.query("select f.food_id, f.food_name, f.food_price, c.catagory_name from Food f left join Classifes c on f.food_id = c.food_id where vendor_id = ? and food_type != 'ALACARTE'", [vid])
-    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.food_status, c.category_name from Food f left join Classifies cl on f.food_id = cl.food_id where vendor_id = ? and food_type = 'ALACARTE'", [vid])
+    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
+    let combilist = await db.query("select f.food_id, f.food_name, f.food_price, f.food_type, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type != 'ALACARTE'", [vid])
+    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.food_status, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type = 'ALACARTE'", [vid])
     console.log(combilist)
     console.log(alaclist)
     combilist.forEach(menu => {
