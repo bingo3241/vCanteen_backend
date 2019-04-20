@@ -431,12 +431,6 @@ app.get("/v1/orders/:id/slot", async (req, res) => {
     }
 })
   
-app.get("/v2/orders/:vid/menu", async (req, res) => {                     
-  let vid = req.params.vid
-  let result = await ordersModel.getVendorMenu(vid)
-  res.json(result)
-})
-
 app.get("/v1/orders/:vid/menu/:fid", async (req, res) => {
   let vid = req.params.vid
   let fid = req.params.fid
