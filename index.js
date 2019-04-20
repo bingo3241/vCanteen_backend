@@ -697,11 +697,15 @@ app.post('/v2/user-authentication/vendor/new', async (req,res) => {
   if(vendorCreated == false) {
     return res.status(500).end()
   }
+  var vendor_id = await vendorsModel.getVendorID(email)
+  var extraInserted = await vendorsModel.preinsertExtra(vendor_id)
+  if(extraInserted == false) {
+    return res.status(500).end()
+  }
   var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
   if(moneyAccountCreated == false) {
     return res.status(500).end()
   }
-  var vendor_id = await vendorsModel.getVendorID(email)
   var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
   var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
   if(linked) {
