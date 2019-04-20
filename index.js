@@ -2,9 +2,6 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 
-
-
-
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -708,7 +705,7 @@ app.post('/v2/settings/customer/report', async (req,res) => {
   if(success) {
     var customer_email = await customersModel.getCustomerEmail(customerId)
     var customer_name = await customersModel.getCustomerFullname(customerId)
-    mailgun.mailReport('Customer', customer_name, customer_email, message, currentDate)
+    mailgun.mailReport('Customer', customer_name, customer_email, message)
     res.status(200).send('Report sent')
   } else {
     res.status(500).send('Error')
@@ -717,14 +714,11 @@ app.post('/v2/settings/customer/report', async (req,res) => {
 
 app.post('/v2/settings/vendor/report', async (req,res) => {
   let {vendorId, message} = req.body
-  let now = new Date()
-  let thistime = now.getTime()+7*60*60*1000
-  let currentDate = new Date(thistime)
   let success = await vendorsModel.sendReport(vendorId, message)
   if(success) {
     var vendor_email = await vendorsModel.getVendorEmail(vendorId)
     var restaurant_name = await vendorsModel.getVendorName(vendorId)
-    mailgun.mailReport('Vendor', restaurant_name, vendor_email, message, currentDate)
+    mailgun.mailReport('Vendor', restaurant_name, vendor_email, message)
     res.status(200).send('Report sent')
   } else {
     res.status(500).send('Error')
