@@ -692,7 +692,7 @@ app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
     await vendorsModel.updateFirebaseToken(email, firebaseToken)
     output.status = 'success'
     output.vendorId = await vendorsModel.getVendorID(email)
-    output.vendorSessionToken = jwt.sign(email)
+    output.token = jwt.sign(email)
     res.status(200).json(output)
   } else {
     res.status(404).json({status: 'error'})
