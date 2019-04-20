@@ -259,6 +259,19 @@ async function getSlotIdV2(oid) {
     let res = await db.query("select was_at_slot_id from Orders where order_id = ?", [oid])
     return res
 }
+async function getListV2(vid) {
+    let list = await db.query("select f.food_id as foodId, f.food_name as foodName, f.food_price as price, f.food_image as foodImage, f.food_status as foodStatus, f.food_type as foodType, f.prepare_duration as prepareDuration, c.category_name as category from Food f left join Classifies c on f.food_id = c.food_id where vendor_id = ?", [vid])
+    let combilist = []
+    let alalist = []
+    list.forEach(food => {
+        if (food.foodType == "ALACARTE") {
+            alalist.push(food)
+        }else {
+            combilist.push(food)
+        }
+    })
+    return {combinationList: combilist, alacarteList: alalist}
+}
 
 module.exports = {
   // getSaleRecord,
@@ -277,4 +290,5 @@ module.exports = {
   getInProgressV2,
   getHistoryV2,
   getSlotIdV2,
+  getListV2,
 }

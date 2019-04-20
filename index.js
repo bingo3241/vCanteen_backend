@@ -654,6 +654,10 @@ app.get("/v2/orders/:oid/slot-old", async (req, res) => {
   res.json(await ordersModel.getSlotIdV2(req.params.oid))
 })
 
+app.get("/v2/menu-management/:vid/menu", async (req, res) => {
+  res.json(await ordersModel.getListV2(req.params.vid))
+})
+
 function sendToFirebase(title, body, token) {
 
   getAccessToken().then(function (access_token) {
