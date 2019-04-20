@@ -548,12 +548,13 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
 
 app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
   let vendor_id = req.body.vendorId
+  let cancel_reason = req.body.cancelReason
   console.log(vendor_id)
   let x = await vendorsModel.getToken(vendor_id)
   x.forEach(id => {
-    firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", id.token_firebase)
+    firebase.sendToFirebase(cancel_reason, "Tap here to view order.", id.token_firebase)
   }) 
-  let[err,result] = await vendorsModel.closeVendor(vendor_id)
+  let[err,result] = await vendorsModel.closeVendor(vendor_id,cancel_reason)
   if (err) {
     res.status(500).json(err)
   } else if (result.affectedRows == 0){

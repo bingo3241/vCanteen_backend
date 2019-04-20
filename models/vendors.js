@@ -255,10 +255,10 @@ async function updateFirebaseToken(email, token){
     }
 }
 
-async function closeVendor(vendor_id){
+async function closeVendor(vendor_id,cancel_reason){
     try{
-        let result = await db.query('UPDATE Orders SET order_status = "CANCELLED" WHERE vendor_id = ? AND order_status = "COOKING" ' , 
-        [vendor_id])
+        let result = await db.query('UPDATE Orders SET order_status = "CANCELLED",cancel_reason = ? WHERE vendor_id = ? AND order_status = "COOKING" ' , 
+        [cancel_reason,vendor_id])
         console.log('Close vendor success')
         return [null,result]
     } 
