@@ -891,32 +891,34 @@ app.put("/v2/profile-management/vendor/image", async (req, res) => {
 app.put('/v2/vendor-main/order/status' , async(req,res) => {
   let order_id = req.body.orderId
   let order_status = req.body.orderStatus
-  let cancelReason = req.body.cancelReason
+  let cancel_reason = req.body.cancelReason
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   let currentDate = new Date(thistime)
   let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
   let cid = cidA[0].customer_id
+  console.log(cid)
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
   let token = tokenA[0].token_firebase
+  console.log(token)
   if(order_status == "DONE"){
+    firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
-    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    console.log(order_id)
+    let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
     setTimeout(async () => {
-      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
-    },15000)
+      x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
+    },10*1000)
     setTimeout(async () => {
-      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
-      console.log(orderStatus)
-      let status = orderStatus[0].order_status
-      console.log(status)
-      console.log(status == "COLLECTED")
-      if(status != "COLLECTED"){
-        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
-        x = sendToFirebase("15min leaw ai sus", "time out", token)
-        
+      let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      let orderStatus = orderStatusA[0].order_status
+      if(orderStatus != "COLLECTED"){
+        await vendorsModel.updateCancelReason(order_id,"TIMEOUT",cancel_reason)
+        x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
+        await db.query("UPDATE Orders SET was_at_slot_id = (SELECT slot_id FROM Is_At WHERE order_id = ? ) WHERE order_id = ? ", [order_id,order_id])
+        await db.query("DELETE FROM Is_At WHERE order_id = ?", [order_id])       
       } 
-    },30000)
+    },20*1000)
     if (err) {
         res.status(500).json(err)
       } else if (result.affectedRows == 0){
@@ -927,9 +929,10 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   }
 
   if(order_status == "CANCELLED"){
-    x = sendToFirebase("noti", "order cancelled", token)
-    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id, cancelReason)
-    if (err) {
+    x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
+    console.log(order_id)
+    let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
+    if(err) {
       res.status(500).json(err)
     } else if (result.affectedRows == 0){
       res.status(404).send()
