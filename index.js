@@ -846,7 +846,7 @@ app.get('/v2/orders/:orderId/cancellation-reason' , async(req,res) => {
   if (result == false) {
     res.status(404).send()
   } else {
-    res.json(result)
+    res.json({"cancelReason": result})
   }
 })
 
