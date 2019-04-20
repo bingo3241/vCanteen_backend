@@ -117,11 +117,12 @@ async function getVendor() {
     let x = []   
     for (let i = 0; i<open.length; i++) {  
             let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where vendor_id = (select distinct vendor_id from Orders where vendor_id = ?) AND order_status = 'COOKING'", [open[i].vendorId])
-            x.push({"vendorId": open[i].vendorId, "restaurantName": open[i].restaurantName, "vendorImage": open[i].vendorImage, "queuingTime": Math.ceil(waittime[0].time/60)})
+            x.push({"vendorId": open[i].vendorId, "restaurantName": open[i].restaurantName, "vendorImage": open[i].vendorImage, "vendorStatus": open[i].vendorStatus ,"queuingTime": Math.ceil(waittime[0].time/60)})
     } 
-    close.forEach(data => {
-        x.push(data)
-    })
+    for (let i = 0; i<close.length; i++) {  
+        let waittime = 0
+        x.push({"vendorId": close[i].vendorId, "restaurantName": close[i].restaurantName, "vendorImage": close[i].vendorImage, "vendorStatus": close[i].vendorStatus, "queuingTime": waittime})
+    }
     return x             
 }
 
