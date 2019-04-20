@@ -1,6 +1,8 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
+var moment = require('moment-timezone');
+moment.tz.setDefault("Asia/Bangkok");
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -12,6 +14,7 @@ const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
 const moneyAccountsModel = require('./models/moneyAccounts')
 const paymentModel = require('./models/payment')
+const crowdEstimationModel = require('./models/crowdEstimations')
 
 const db = require('./db/db')
 const firebase = require('./db/firebase')
@@ -1016,6 +1019,34 @@ app.get('/v2/customer-main/:customerId/home' , async(req,res) => {
   } else {
     res.json(result)
   }
+})
+
+app.get('/v2/crowd-estimation/current', async (req,res) => {
+  let result = await crowdEstimationModel.getLatestRecord()
+  if(result == false) {
+    res.status(404).end()
+  } else {
+    res.status(200).json(result)
+  }
+})
+
+app.get('/v2/crowd-estimation/current/all', async (req,res) => {
+  let result1 = await crowdEstimationModel.getLatestRecord()
+  let latestDay = await crowdEstimationModel.getDayOfLatestRecord()
+  let result2 = await crowdEstimationModel.getHourlyStat(latestDay)
+  if(result1 == false || result2 == false) {
+    res.status(404).end()
+  } else {
+    var output = new Object()
+    output.percentDensity = result1.percentDensity
+    output.latestTime = result1.latestTime
+    output.hourlyCrowdStat = result2
+    res.status(200).json(output)
+  }
+})
+
+app.get('/v2/crowd-estimation/:day', async (req,res) => {
+  return res.status(200).json(await crowdEstimationModel.getHourlyStat(req.params.day))
 })
 
 

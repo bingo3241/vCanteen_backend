@@ -3,7 +3,7 @@ node_modules/
 jwt_tai.js
 test.js
 rearrange.js
-service_account.js
+service_account.json
 service-account.json
 # Logs
 logs
