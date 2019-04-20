@@ -231,6 +231,18 @@ async function insertFacebook(email) {
     }
 }
 
+async function insertNewVendor(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) {
+    try{
+        await db.query("INSERT INTO Vendors(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) VALUES (?,?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token])
+        console.log('New Vendor Created: '+email)
+        return true
+    } 
+    catch(err) {
+        console.log('Creating New Vendor Failed')
+        return false
+    }
+}
+
 async function updateFirebaseToken(email, token){
     try{
         let result = await db.query('UPDATE Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
@@ -243,10 +255,10 @@ async function updateFirebaseToken(email, token){
     }
 }
 
-async function closeVendor(vendor_id){
+async function closeVendor(vendor_id,cancel_reason){
     try{
-        let result = await db.query('UPDATE Orders SET order_status = "CANCELLED" WHERE vendor_id = ? AND order_status = "COOKING" ' , 
-        [vendor_id])
+        let result = await db.query('UPDATE Orders SET order_status = "CANCELLED",cancel_reason = ? WHERE vendor_id = ? AND order_status = "COOKING" ' , 
+        [cancel_reason,vendor_id])
         console.log('Close vendor success')
         return [null,result]
     } 
@@ -362,6 +374,21 @@ async function editProfileImgV2(vid, img) {
     return result
 }
 
+async function preinsertExtra(vendor_id) {
+    try{
+        await db.query("INSERT INTO Food(food_name, food_price, food_type, vendor_id, prepare_duration) "+
+        "VALUES ('Extra rice', 10, 'EXTRA', ?, 0), "+
+        "('No vegetable', 0, 'EXTRA', ?, 0), "+
+        "('Not spicy', 10, 'EXTRA', ?, 0)", [vendor_id, vendor_id, vendor_id])
+        console.log('Food Extra Created for VendorID: '+vendor_id)
+        return true
+    } 
+    catch(err) {
+        console.log('Creating Food Extra Failed')
+        return false
+    }
+}
+
 
 
 module.exports = {
@@ -396,12 +423,13 @@ module.exports = {
     addMenuV2,
     editProfileV2,
     editProfileImgV2,
-  
     changePasswords,
     getAccountType,
     insertFacebook,
+    insertNewVendor,
     updateFirebaseToken,
     closeVendor,
     sendReport,
-    updateCancelReason
+    updateCancelReason,
+    preinsertExtra
 }
