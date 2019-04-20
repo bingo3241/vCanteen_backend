@@ -624,6 +624,29 @@ app.post('/v2/user-authentication/customer/signin', async (req,res) => {
   }
 })
 
+app.post('/v2/user-authentication/customer/new', async (req,res) => {
+  let {email, password, firstname, lastname, customerImage, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
+  var customerCreated = await customersModel.insertNewCustomer(email, password, firstname, lastname, customerImage, accountType, firebaseToken)
+  if(customerCreated == false) {
+    return res.status(500).end()
+  }
+  var moneyAccountCreated = await moneyAccountsModel.createCustomer(serviceProvider, accountNumber)
+  if(moneyAccountCreated == false) {
+    return res.status(500).end()
+  }
+  var customer_id = await customersModel.getCustomerID(email)
+  var money_account_id = await moneyAccountsModel.getCustomerAccountID(accountNumber)
+  var linked = await paymentModel.linkCustomerPayment(customer_id, money_account_id)
+  if(linked) {
+    var output = new Object()
+    output.customerId = customer_id
+    output.customerSessionToken = jwt.sign(email)
+    res.status(200).json(output)
+  } else {
+    res.status(500).end()
+  }
+})
+
 app.put('/v2/user-authentication/vendor/verify/email', async (req,res) => {
   let {email} = req.body
   if(await vendorsModel.isInDatabase(email) == true) {
@@ -665,6 +688,29 @@ app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
     res.status(200).json(output)
   } else {
     res.status(404).json({status: 'error'})
+  }
+})
+
+app.post('/v2/user-authentication/vendor/new', async (req,res) => {
+  let {email, password, vendorName, vendorImage, phoneNumber, fourDigitPin, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
+  var vendorCreated = await vendorsModel.insertNewVendor(email, password, accountType, vendorName, vendorImage, phoneNumber, fourDigitPin, firebaseToken)
+  if(vendorCreated == false) {
+    return res.status(500).end()
+  }
+  var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
+  if(moneyAccountCreated == false) {
+    return res.status(500).end()
+  }
+  var vendor_id = await vendorsModel.getVendorID(email)
+  var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
+  var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
+  if(linked) {
+    var output = new Object()
+    output.vendorId = vendor_id
+    output.vendorSessionToken = jwt.sign(email)
+    res.status(200).json(output)
+  } else {
+    res.status(500).end()
   }
 })
 
