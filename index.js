@@ -577,7 +577,7 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
 
 app.get('/v2/customer-main/:customerId/home' , async(req,res) => {
   let customer_id = req.params.customerId
-  let result = { customer: await customersModel.getCusInfo(customer_id), percentDensity: await customersModel.getDensity(),recommend: await customerModel.getRecommend()}
+  let result = { customer: await customersModel.getCusInfo(customer_id), percentDensity: await customersModel.getDensity(),recommend: await customersModel.getRecommend()}
   if(result.customer == false && result.percentDensity == false && result.recommend == false) {
     res.status(404).send()
   } else {
@@ -590,7 +590,7 @@ app.get('/v2/orders/all-vendors' , async(req,res) => {
   if(result == false) {
     res.status(404).send()
   } else {
-    res.json(result)
+    res.json({"vendorList":result})
   }
 })
 

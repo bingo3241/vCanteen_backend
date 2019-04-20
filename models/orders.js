@@ -69,7 +69,7 @@ async function getVendorMenu(vid) {
     let hasCombination = true
     let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
     let menulist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-    let foodlist = await db.query("select * from Categories JOIN Classifies on Categories.category_id = Classifies.category_id JOIN Food on Food.food_id = Classifies.food_id   where vendor_id = ? and food_type = 'alacarte'", [vid])
+    let foodlist = await db.query("select * from Classifies JOIN Food on Food.food_id = Classifies.food_id  where vendor_id = ? and food_type = 'alacarte'", [vid])
     menulist.forEach(menu => {
         if (menu.food_type === "COMBINATION_BASE") {
             if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
