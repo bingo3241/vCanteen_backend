@@ -9,15 +9,19 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
+const adminModel = require('./models/admin')
 const customersModel = require('./models/customers');
 const ordersModel = require('./models/orders')
 const vendorsModel = require('./models/vendors')
+const moneyAccountsModel = require('./models/moneyAccounts')
+const paymentModel = require('./models/payment')
+
 const db = require('./db/db')
 const firebase = require('./db/firebase')
 
 
 const passwordModule = require('./helpers/password');
-const emailModule = require('./helpers/email');
+const mailgun = require('./helpers/email');
 
 const jwt = require('./library/jwt');
 
@@ -52,7 +56,7 @@ app.put('/v1/user-authentication/customer/password/recover', async (req,res) => 
         }else {
           console.log('Password has been updated')
           await firebase.updatePassword(uid, hash)
-          emailModule.mailto(newpassword,email);
+          mailgun.mailNewPassword(newpassword,email);
           res.status(200).json('Success');        }
     } else {
         res.status(404).json('Error!');
@@ -93,7 +97,7 @@ app.put('/v1/user-authentication/vendor/password/recover', async (req,res) => {
       }else {
         await firebase.updatePassword(uid, hash)
         console.log('Password has been updated')
-        emailModule.mailto(newpassword,email);
+        mailgun.mailNewPassword(newpassword,email);
         res.status(200).send('Success');
       }
   } else {
@@ -253,20 +257,26 @@ app.post('/v1/user-authentication/vendor/check/token', async (req,res) => {
 })
 
 app.post('/v1/user-authentication/customer/verify/token', async (req,res) => {
-  var token = req.body.token
+  let {email, token} = req.body
   if(jwt.verify(token) == false) {
       console.log("Invalid token")
       res.json({expired: true})
+  } else if(jwt.verify(token).email != email) {
+    console.log("This token was issued for another user")
+    res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})
   }
 })
 
 app.post('/v1/user-authentication/vendor/verify/token', async (req,res) => {
-  var token = req.body.token
+  let {email, token} = req.body
   if(jwt.verify(token) == false) {
       console.log("Invalid token")
       res.json({expired: true})
+  } else if(jwt.verify(token).email != email) {
+    console.log("This token was issued for another user")
+    res.json({expired: true})
   } else {
       res.json({expired: jwt.isExpired(token)})
   }
@@ -571,6 +581,200 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
     res.status(200).send()
   } 
 })
+
+//----------------------------------------------------------------------------------------------------------
+app.post('/v2/user-authentication/admin/verify/token', async (req,res) => {
+  let {email, token} = req.body
+  if(jwt.verify(token) == false) {
+      console.log("Invalid token")
+      res.json({expired: true})
+  } else if(jwt.verify(token).email != email) {
+    console.log("This token was issued for another user")
+    res.json({expired: true})
+  } else {
+      res.json({expired: jwt.isExpired(token)})
+  }
+})
+
+app.post('/v2/user-authentication/admin/signin', async (req,res) => {
+  var output = new Object()
+  let {email, password} = req.body
+  var authed = await adminModel.auth(email, password)
+  if(authed) {
+    output.status = 'success'
+    output.adminId = await adminModel.getAdminID(email)
+    output.token = jwt.sign(email)
+    res.status(200).json(output)
+  } else {
+    res.status(404).json({status: 'error'})
+  }
+})
+
+app.put('/v2/user-authentication/customer/verify/email', async (req,res) => {
+  let {email} = req.body
+  if(await customersModel.isInDatabase(email) == true) {
+    var account_type = await customersModel.getAccountType(email)
+    res.status(200).json({accountType: account_type})
+  } else {
+    res.status(404).send('Email not found')
+  }
+})
+
+app.put('/v2/user-authentication/customer/verify/facebook', async (req,res) => {
+  var output = new Object()
+  let {email, firebaseToken} = req.body
+  var isInDatabase = await customersModel.isInDatabase(email)
+  if(isInDatabase == false) {
+    return res.status(404).send('Email not found')
+  }
+  var account_type = await customersModel.getAccountType(email)
+  if(account_type == 'FACEBOOK') {
+    await customersModel.updateFirebaseToken(email, firebaseToken)
+    output.accountType = account_type
+    output.customerSessionToken = jwt.sign(email)
+    res.status(200).json(output)
+  } else if(account_type == 'NORMAL'){
+    output.accountType = account_type
+    res.status(200).json(output)
+  }
+})
+
+app.post('/v2/user-authentication/customer/signin', async (req,res) => {
+  var output = new Object()
+  let {email, password, firebaseToken} = req.body
+  var authed = await customersModel.NormalAuth(email, password)
+  if(authed) {
+    await customersModel.updateFirebaseToken(email, firebaseToken)
+    output.status = 'success'
+    output.customerId = await customersModel.getCustomerID(email)
+    output.customerSessionToken = jwt.sign(email)
+    res.status(200).json(output)
+  } else {
+    res.status(404).json({status: 'error'})
+  }
+})
+
+app.put('/v2/user-authentication/vendor/verify/email', async (req,res) => {
+  let {email} = req.body
+  if(await vendorsModel.isInDatabase(email) == true) {
+    var account_type = await vendorsModel.getAccountType(email)
+    res.status(200).json({accountType: account_type})
+  } else {
+    res.status(404).send('Email not found')
+  }
+})
+
+app.put('/v2/user-authentication/vendor/verify/facebook', async (req,res) => {
+  var output = new Object()
+  let {email} = req.body
+  var isInDatabase = await vendorsModel.isInDatabase(email)
+  if(isInDatabase == false) {
+    return res.status(404).send('Email not found')
+  }
+  var account_type = await vendorsModel.getAccountType(email)
+  if(account_type == 'FACEBOOK') {
+    await vendorsModel.updateFirebaseToken(email, firebaseToken)
+    output.accountType = account_type
+    output.vendorSessionToken = jwt.sign(email)
+    res.status(200).json(output)
+  } else if(account_type == 'NORMAL'){
+    output.accountType = account_type
+    res.status(200).json(output)
+  }
+})
+
+app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
+  var output = new Object()
+  let {email, password, firebaseToken} = req.body
+  var authed = await vendorsModel.NormalAuth(email, password)
+  if(authed) {
+    await vendorsModel.updateFirebaseToken(email, firebaseToken)
+    output.status = 'success'
+    output.vendorId = await vendorsModel.getVendorID(email)
+    output.token = jwt.sign(email)
+    res.status(200).json(output)
+  } else {
+    res.status(404).json({status: 'error'})
+  }
+})
+
+app.post('/v2/settings/customer/report', async (req,res) => {
+  let {customerId, message} = req.body
+  let success = await customersModel.sendReport(customerId, message)
+  if(success) {
+    var customer_email = customersModel.getCustomerEmail(customerId)
+    mailgun.mailReport(customer_email, message)
+    res.status(200).send('Report sent')
+  } else {
+    res.status(500).send('Error')
+  }
+})
+
+app.post('/v2/settings/vendor/report', async (req,res) => {
+  let {vendorId, message} = req.body
+  let success = await vendorsModel.sendReport(vendorId, message)
+  if(success) {
+    var vendor_email = vendorsModel.getVendorEmail(vendorId)
+    mailgun.mailReport(vendor_email, message)
+    res.status(200).send('Report sent')
+  } else {
+    res.status(500).send('Error')
+  }
+})
+
+app.post('/v2/payments/customer/link', async (req,res) => {
+  let {customerId, serviceProvider, accountNumber} = req.body
+  var createdMoneyAccount = await moneyAccountsModel.createCustomer(serviceProvider, accountNumber)
+  if(createdMoneyAccount == false) {
+    res.status(500).send('Creating Customer Money Account Error')
+  }
+  var money_account_id = await moneyAccountsModel.getCustomerAccountID(accountNumber)
+  if(await paymentModel.linkCustomerPayment(customerId, money_account_id)) {
+    res.status(200).send('Linking Completed')
+  } else {
+    res.status(500).send('Linking Error')
+  }
+})
+
+app.delete('/v2/payments/customer/:customerId/:customerMoneyAccountId', async (req,res) => {
+  var customer_id = req.params.customerId
+  var money_account_id = req.params.customerMoneyAccountId
+  if(await paymentModel.unlinkCustomerPayment(customer_id, money_account_id)) {
+    res.status(200).send('Unlinked')
+  } else {
+    res.status(500).send('Unlinking Error')
+  }
+})
+
+app.post('/v2/payments/vendor/link', async (req,res) => {
+  let {vendorId, serviceProvider, accountNumber} = req.body
+  var createdMoneyAccount = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
+  if(createdMoneyAccount == false) {
+    res.status(500).send('Creating Vendor Money Account Error')
+  }
+  var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
+  if(await paymentModel.linkVendorPayment(vendorId, money_account_id)) {
+    res.status(200).send('Linking Completed')
+  } else {
+    res.status(500).send('Linking Error')
+  }
+})
+
+app.delete('/v2/payments/vendor/:vendorId/:vendorMoneyAccountId', async (req,res) => {
+  var vendor_id = req.params.vendorId
+  var money_account_id = req.params.vendorMoneyAccountId
+  if(await paymentModel.unlinkVendorPayment(vendor_id, money_account_id)) {
+    res.status(200).send('Unlinked')
+  } else {
+    res.status(500).send('Unlinking Error')
+  }
+})
+
+app.get('/v2/payments/:vendorId/payment-method', async (req,res) => {
+  var vendor_id = req.params.vendorId
+  res.status(200).json({availablePaymentMethod: await paymentModel.getVendorPaymentMethod(vendor_id)})
+})
+
 
 
 let port = process.env.PORT;

@@ -13,7 +13,13 @@ async function getVendorID(email) {
     return Number(temp[0].vendor_id);
 }
 
+async function getVendorEmail(vendor_id) {
+    var temp = await db.query('SELECT email FROM Vendors WHERE vendor_id= ?', [vendor_id])
+    return temp[0].email;
+}
+
 async function isInDatabase(email) {
+    console.log('Input Email: '+email)
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Vendors WHERE email = ?', [email])
     if( temp[0].Count == 1 ){
         console.log("In database?: true")
@@ -27,10 +33,10 @@ async function isInDatabase(email) {
 async function NormalAuth(email, password) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Vendors WHERE email = ? AND passwd = ?', [email, password])
     if( temp[0].Count == 1 ){
-        console.log("Authentication: true")
+        console.log("Authentication: successed")
         return true;
     } else {
-        console.log("Authentication: false")
+        console.log("Authentication: failed")
         return false;
     }
 }
@@ -220,14 +226,14 @@ async function insertFacebook(email) {
     }
 }
 
-async function insertFirebaseToken(email, token){
+async function updateFirebaseToken(email, token){
     try{
         let result = await db.query('UPDATE Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
         console.log('firebaseToken inserted to '+email)
         return result
     } 
     catch(err) {
-        console.log('insert firebaseToken error')
+        console.log('Update firebaseToken error')
         return err
     }
 }
@@ -245,16 +251,26 @@ async function closeVendor(vendor_id){
     }
 }
 
-async function getToken(vendor_id){
-    let x = await db.query('SELECT DISTINCT token_firebase from Customers c JOIN Orders o on c.customer_id = o.customer_id WHERE vendor_id =?', [vendor_id])
-    console.log(x)
-    return x
+async function sendReport(vendor_id, message) {
+    let now = new Date()
+    let thistime = now.getTime()+7*60*60*1000
+    let currentDate = new Date(thistime)
+    try {
+        await db.query("INSERT INTO VendorReports(created_at, vendor_id, message) "+
+                       "Values(?, ?, ?)", [currentDate, vendor_id, message])
+        console.log('Report Sent Successfully')
+        return true
+    } catch (err) {
+        console.log('Sending Report Failed')
+        return false
+    }
 }
 
 module.exports = {
     getAll,
     get,
     getVendorID,
+    getVendorEmail,
     isInDatabase,
     NormalAuth,
     updateOrderStatus,
@@ -274,7 +290,7 @@ module.exports = {
     changePasswords,
     getAccountType,
     insertFacebook,
-    insertFirebaseToken,
+    updateFirebaseToken,
     closeVendor,
-    getToken
+    sendReport
 }
