@@ -231,6 +231,18 @@ async function insertFacebook(email) {
     }
 }
 
+async function insertNewVendor(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) {
+    try{
+        await db.query("INSERT INTO Vendors(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) VALUES (?,?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token])
+        console.log('New Vendor Created: '+email)
+        return true
+    } 
+    catch(err) {
+        console.log('Creating New Vendor Failed')
+        return false
+    }
+}
+
 async function updateFirebaseToken(email, token){
     try{
         let result = await db.query('UPDATE Vendors SET token_firebase = ? WHERE email = ? ', [token, email])
@@ -396,10 +408,10 @@ module.exports = {
     addMenuV2,
     editProfileV2,
     editProfileImgV2,
-  
     changePasswords,
     getAccountType,
     insertFacebook,
+    insertNewVendor,
     updateFirebaseToken,
     closeVendor,
     sendReport,
