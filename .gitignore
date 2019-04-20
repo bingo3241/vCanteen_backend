@@ -4,6 +4,7 @@ jwt_tai.js
 test.js
 rearrange.js
 service_account.js
+service-account.json
 # Logs
 logs
 *.log

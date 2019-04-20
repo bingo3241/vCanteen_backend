@@ -469,11 +469,10 @@ app.put("/v1/orders/:oid/status/collected", async (req, res) => {
 
 app.post("/v1/orders/new", async (req, res) => {
   let { orderList, customerId, vendorId, customerMoneyAccountId, totalPrice } = req.body
-  //let foods = req.body.foods
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   now = new Date(thistime)
-  let [err, result] = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
+  let err = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
   if (err) res.status(400).send()
   else res.status(200).send()
 
@@ -570,28 +569,8 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
   } 
 })
 
-//----------------------------------------------------------------------------------------------------------
-app.post('/v2/user-authentication/admin/verify/token', async (req,res) => {
-  let {email, token} = req.body
-  if(jwt.verify(token) == false) {
-      console.log("Invalid token")
-      res.json({expired: true})
-  } else if(jwt.verify(token).email != email) {
-    console.log("This token was issued for another user")
-    res.json({expired: true})
-  } else {
-      res.json({expired: jwt.isExpired(token)})
-  }
-})
-app.get('/v2/customer-main/:customerId/home' , async(req,res) => {
-  let customer_id = req.params.customerId
-  let result = { customer: await customersModel.getCusInfo(customer_id), percentDensity: await customersModel.getDensity(),recommend: await customersModel.getRecommend()}
-  if(result.customer == false && result.percentDensity == false && result.recommend == false) {
-    res.status(404).send()
-  } else {
-    res.json(result)
-  }
-})
+
+//--------------------------------------------------------------------------------V2---------------------------------------------------------------------------------
 
 app.post('/v2/user-authentication/admin/signin', async (req,res) => {
   var output = new Object()
@@ -817,6 +796,174 @@ app.get('/v2/orders/:orderId/cancellation-reason' , async(req,res) => {
   let order_id = req.params.orderId
   let result = await ordersModel.getCancelReason(order_id)
   if (result == false) {
+    res.status(404).send()
+  } else {
+    res.json(result)
+  }
+})
+
+app.post("/v2/orders/customer/rating", async (req, res) => {
+  let {customerId, orderId, score, comment} = req.body
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
+  let err = customersModel.reviewVendorV2(customerId, orderId, score, comment, currentDate)
+  if (err) {
+    res.status(400).send()
+  }else res.status(200).send()
+})
+
+app.get("/v2/orders/:vid/menu", async (req, res) => {                     
+  let vid = req.params.vid
+  let result = await ordersModel.getVendorMenuV2(vid)
+  res.json(result)
+})
+
+app.get("/v2/menu-management/:vid/menu/:fid", async (req, res) => {
+  res.json(await vendorsModel.getFoodByIdV2(req.params.fid))
+})
+
+app.get("/v2/settings/:vid/info/reviews", async (req,res) => {   //tested
+  res.json(await vendorsModel.getReviewV2(req.params.vid))
+})
+
+app.get("/v2/settings/:vid/info", async (req, res) => {   //tested
+  res.json(await vendorsModel.getVendorInfoV2(req.params.vid))
+})
+
+app.get("/v2/orders/customers/:cid/in-progress", async (req, res) => { //tested
+  res.json(await ordersModel.getInProgressV2(req.params.cid))
+})
+app.get('/v2/orders/customers/:customerId/history', async (req, res) => { //tested
+  var customerId = req.params.customerId;
+  res.status(200).json(await ordersModel.getHistoryV2(customerId))
+})
+
+app.put("/v2/user-authentication/verify/pin", async (req, res) => { //tested
+  let {vendorId, fourDigitPin} = req.body
+  let result = await vendorsModel.verifyPinV2(vendorId, fourDigitPin)
+  if (result) res.status(200).send()
+  else res.status(404).send()
+})
+
+app.put("/v2/user-authentication/vendor/pin", async (req, res) => { //tested
+  let {vendorId, fourDigitPin} = req.body
+  let result = await vendorsModel.editPinV2(vendorId, fourDigitPin)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put("/v2/menu-management/menu", async (req, res) => {  
+  let {vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
+  let err = await vendorsModel.editMenuV2(vendorId, foodId, foodName, foodPrice, foodStatus, foodType, foodImage, categoryName, prepareDuration)
+  if(err) res.json(err)
+  else res.status(200).send()
+})
+ 
+app.post("/v2/menu-management/menu", async (req, res) => {  
+  let {vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
+  let [result, err] = await vendorsModel.addMenuV2(vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, categoryName, prepareDuration)
+  if (err) res.status(400).send()
+  else res.json(result.insertId)
+})
+
+app.put("/v2/profile-management/customer/profile", async (req, res) => {
+  let {customerId, firstname, lastname, email, profileImage} = req.body
+  let result = await customersModel.editProfileV2(customerId, firstname, lastname, email, profileImage)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put("/v2/profile-management/vendor/profile", async (req, res) => {
+  let {vendorId, restaurantName, email} = req.body
+  let result = await vendorsModel.editProfileV2(vendorId, restaurantName, email)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put("/v2/profile-management/vendor/image", async (req, res) => {
+  let {vendorId, vendorImage} = req.body
+  let result = await vendorsModel.editProfileImgV2(vendorId, vendorImage)
+  if (result.affectedRows == 1) res.status(200).send()
+  else res.status(400).send()
+})
+
+app.put('/v2/vendor-main/order/status' , async(req,res) => {
+  let order_id = req.body.orderId
+  let order_status = req.body.orderStatus
+  let cancelReason = req.body.cancelReason
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let currentDate = new Date(thistime)
+  let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
+  let cid = cidA[0].customer_id
+  let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
+  let token = tokenA[0].token_firebase
+  if(order_status == "DONE"){
+    let x = await vendorsModel.assignSlot(order_id, currentDate)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status, order_id)
+    setTimeout(async () => {
+      x = sendToFirebase("10min leaw ai sus", "collect pls", token)
+    },15000)
+    setTimeout(async () => {
+      let orderStatus = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      console.log(orderStatus)
+      let status = orderStatus[0].order_status
+      console.log(status)
+      console.log(status == "COLLECTED")
+      if(status != "COLLECTED"){
+        vendorsModel.updateOrderStatus("TIMEOUT", order_id)
+        x = sendToFirebase("15min leaw ai sus", "time out", token)
+        
+      } 
+    },30000)
+    if (err) {
+        res.status(500).json(err)
+      } else if (result.affectedRows == 0){
+        res.status(404).send()
+      }else {
+        res.status(200).send()
+      } 
+  }
+
+  if(order_status == "CANCELLED"){
+    x = sendToFirebase("noti", "order cancelled", token)
+    let [err, result] = await vendorsModel.updateOrderStatus(order_status ,order_id, cancelReason)
+    if (err) {
+      res.status(500).json(err)
+    } else if (result.affectedRows == 0){
+      res.status(404).send()
+    }else {
+      res.status(200).send()
+    } 
+  }
+  
+})
+
+app.get("/v2/orders/:oid/slot-old", async (req, res) => {
+  res.json(await ordersModel.getSlotIdV2(req.params.oid))
+})
+
+app.get("/v2/menu-management/:vid/menu", async (req, res) => {
+  res.json(await ordersModel.getListV2(req.params.vid))
+})
+
+app.post('/v2/user-authentication/admin/verify/token', async (req,res) => {
+  let {email, token} = req.body
+  if(jwt.verify(token) == false) {
+      console.log("Invalid token")
+      res.json({expired: true})
+  } else if(jwt.verify(token).email != email) {
+    console.log("This token was issued for another user")
+    res.json({expired: true})
+  } else {
+      res.json({expired: jwt.isExpired(token)})
+  }
+})
+app.get('/v2/customer-main/:customerId/home' , async(req,res) => {
+  let customer_id = req.params.customerId
+  let result = { customer: await customersModel.getCusInfo(customer_id), percentDensity: await customersModel.getDensity(),recommend: await customersModel.getRecommend()}
+  if(result.customer == false && result.percentDensity == false && result.recommend == false) {
     res.status(404).send()
   } else {
     res.json(result)
