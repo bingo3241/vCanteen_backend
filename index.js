@@ -24,16 +24,6 @@ const mailgun = require('./helpers/email');
 
 const jwt = require('./library/jwt');
 
-const verifyJWT = (req, res, next) => {
-  var token = req.body.token
-  if (jwt.verify(token) != false) {
-    next()
-  }
-  else {
-    res.status(403).json('Token is invalid or expired')
-  }
-}
-
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
@@ -710,9 +700,10 @@ app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
 
 app.post('/v2/settings/customer/report', async (req,res) => {
   let {customerId, message} = req.body
+  console.log
   let success = await customersModel.sendReport(customerId, message)
   if(success) {
-    var customer_email = customersModel.getCustomerEmail(customerId)
+    var customer_email = await customersModel.getCustomerEmail(customerId)
     mailgun.mailReport(customer_email, message)
     res.status(200).send('Report sent')
   } else {
@@ -724,7 +715,7 @@ app.post('/v2/settings/vendor/report', async (req,res) => {
   let {vendorId, message} = req.body
   let success = await vendorsModel.sendReport(vendorId, message)
   if(success) {
-    var vendor_email = vendorsModel.getVendorEmail(vendorId)
+    var vendor_email = await vendorsModel.getVendorEmail(vendorId)
     mailgun.mailReport(vendor_email, message)
     res.status(200).send('Report sent')
   } else {

@@ -84,10 +84,10 @@ async function sendReport(customer_id, message) {
     try {
         await db.query("INSERT INTO CustomerReports(created_at, customer_id, message) "+
                  "VALUES(?, ?, ?)", [currentDate, customer_id, message])
-        console.log('Report Sent Successfully')
+        console.log('Log Report Successfully')
         return true
     } catch (err) {
-        console.log('Sending Report Failed')
+        console.log('Logging Report Failed')
         return false
     }
 }
