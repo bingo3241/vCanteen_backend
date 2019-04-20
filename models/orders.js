@@ -176,9 +176,9 @@ async function getVendorMenuV2(vid) {
     let availist = []
     let soldoutlist = []
     let hasCombination = true
-    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  //need to add select vendor_image b4 deploy
-    let combilist = await db.query("select * from Food where vendor_id = ? and food_type != 'alacarte'", [vid])
-    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.prepare_duration, f.food_status, c.category_name from Food f join Classifies cl join Categories c on f.food_id = cl.food_id and cl.category_id = c.category_id where vendor_id = ? and food_type = 'alacarte'", [vid])
+    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
+    let combilist = await db.query("select f.food_id, f.food_name, f.food_price, f.food_type, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type != 'ALACARTE'", [vid])
+    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.food_status, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type = 'ALACARTE'", [vid])
     console.log(combilist)
     console.log(alaclist)
     combilist.forEach(menu => {
@@ -191,12 +191,11 @@ async function getVendorMenuV2(vid) {
     })
     alaclist.forEach(food => {
         const {food_id,food_name,food_price,category_name} = food
-        let timetakes = Math.ceil(food.prepare_duration/60)
         if (food.food_status == "AVAILABLE") {
-          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name,prepareDuration:timetakes})
+          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name})
         }
         if (food.food_status == "SOLD_OUT") {
-          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name,prepareDuration:timetakes})
+          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name})
         }
     })    
     minCombinationPrice = minBasePrice+minMainPrice

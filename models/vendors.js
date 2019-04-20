@@ -227,7 +227,7 @@ async function getFoodByIdV2(fid) {
     let res = await db.query("select * from Food where food_id = ?", [fid])
     res = res[0]
     let category = await db.query("select category_name from Classifies where food_id = ?", [fid])
-    let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "category": category[0]}
+    let resp = {"foodId": res.food_id, "food_name": res.food_name, "price": res.food_price, "foodStatus": res.food_status, "foodImage": res.food_image, "foodType": res.food_type, "category": category[0].category_name}
     //console.log(category)
     return resp
 }
