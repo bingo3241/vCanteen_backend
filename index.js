@@ -604,7 +604,7 @@ app.post('/v2/user-authentication/admin/signin', async (req,res) => {
   if(authed) {
     output.status = 'success'
     output.adminId = await adminModel.getAdminID(email)
-    output.customerSessionToken = jwt.sign(email)
+    output.token = jwt.sign(email)
     res.status(200).json(output)
   } else {
     res.status(404).json({status: 'error'})
