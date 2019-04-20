@@ -1,4 +1,5 @@
 const db = require('../db/db');
+const _ = require("underscore")
 
 async function getSaleRecords(vendorId) {
     var output = new Object() 
@@ -41,7 +42,7 @@ function getHistory(customerId) {
 
 async function updateOrderStatusToCollected(id) {
     try {
-        let result = await db.query("update Orders set order_status = 'COLLECTED' where order_id = ? and order_status = 'DONE'", [id])
+        let result = await db.query("update Orders set order_status = 'COLLECTED', was_at_slot_id = (select slot_id from Is_At where order_id =?) where order_id = ? and order_status = 'DONE'", [id, id])
         let del = await db.query("delete from Is_At where order_id = ?", [id])
         return [null, result]
     }
@@ -128,30 +129,37 @@ async function getBaseMainExtraList(vid) {
 
 async function postNewOrder(orderList, customerId, vendorId, currentDate, customerMoneyAccountId, totalPrice) {
     try {
-    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
-    let custAcc = await db.query("select balance, money_account_id as moneyAccId from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
-    custAcc[0].balance -= totalPrice
-    vendorAcc[0].balance += totalPrice
-    let changeCustBalance = await db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
-    let changeVendorBalance = await db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    let vendorAcc = await db.query("select vm.balance, vm.money_account_id as moneyAccId, vm.account_number from VendorMoneyAccounts vm join Vendor_Links vl on vm.money_account_id = vl.money_account_id where vl.vendor_id = ?",[vendorId])
+    let custAcc = await db.query("select balance, money_account_id as moneyAccId, account_number from CustomerMoneyAccounts where money_account_id = ?", [customerMoneyAccountId])
+    if (vendorAcc[0].account_number != custAcc[0].account_number){
+        custAcc[0].balance -= totalPrice
+        vendorAcc[0].balance += totalPrice
+        db.query("update CustomerMoneyAccounts set balance = ? where money_account_id = ?", [custAcc[0].balance, customerMoneyAccountId])
+        db.query("update VendorMoneyAccounts set balance = ? where money_account_id = ?", [vendorAcc[0].balance, vendorAcc[0].moneyAccId])
+    }
     let transacResult = await db.query("insert into Transactions(created_at, customer_money_account_id, vendor_money_account_id) values (?, ?, ?)", [currentDate, customerMoneyAccountId, vendorAcc[0].moneyAccId])
-    let result = []
     await orderList.forEach(async order => {
         let fids = []
+        let esttime = 0
         let {orderPrice, orderName, orderNameExtra, foodList} = order
         foodList.forEach(food => {
             fids.push(food.foodId)
         })
-        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id) values (?, ?, 'COOKING', ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, currentDate, vendorId, transacResult.insertId])
-        console.log({"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"})
+        for (let i = 0; i<foodList.length;i++)  {
+            let time = await db.query("select prepare_duration from Food where food_id =?", [foodList[i].foodId])
+            esttime += time[0].prepare_duration
+            console.log("time = "+time+" est = "+esttime)
+        }
+        let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id, order_prepare_duration) values (?, ?, 'COOKING', ?, ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, currentDate, vendorId, transacResult.insertId, esttime])
+        let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
+        console.log(returnres)
         fids.forEach(fid => {
-            let insertContain = db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
+            db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
         })
     })
-    console.log(result)
-    return [null, result]
+    return null
     } catch (err){
-        return [err, null]
+        return err
     }
 }
 
@@ -159,6 +167,109 @@ async function getPaymentMethod (cid) {
     let paymentMethod = await db.query("select a.money_account_id as customerMoneyAccountId, a.service_provider as serviceProvider from Customer_Links l join CustomerMoneyAccounts a on l.money_account_id = a.money_account_id where l.customer_id = ?", [cid])
     let response = {"availablePaymentMethod" : paymentMethod}
     return response
+}
+
+async function getVendorMenuV2(vid) {
+    let minBasePrice = 999999999
+    let minMainPrice = 999999999
+    let minCombinationPrice = 0
+    let availist = []
+    let soldoutlist = []
+    let hasCombination = true
+    let vendor = await db.query("select restaurant_name as restaurantName, vendor_image as vendorImage from Vendors where vendor_id = ?", [vid])  
+    let combilist = await db.query("select f.food_id, f.food_name, f.food_price, f.food_type, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type != 'ALACARTE'", [vid])
+    let alaclist = await db.query("select f.food_price, f.food_name, f.food_id, f.food_status, c.category_name from Food f left join Classifies c on f.food_id = c.food_id where f.vendor_id = ? and f.food_type = 'ALACARTE'", [vid])
+    console.log(combilist)
+    console.log(alaclist)
+    combilist.forEach(menu => {
+        if (menu.food_type === "COMBINATION_BASE") {
+            if (menu.food_price < minBasePrice) minBasePrice = menu.food_price
+        }
+        if (menu.food_type === "COMBINATION_MAIN") {
+            if (menu.food_price < minMainPrice) minMainPrice = menu.food_price
+        }
+    })
+    alaclist.forEach(food => {
+        const {food_id,food_name,food_price,category_name} = food
+        if (food.food_status == "AVAILABLE") {
+          availist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name})
+        }
+        if (food.food_status == "SOLD_OUT") {
+          soldoutlist.push({foodId:food_id,foodName:food_name,foodPrice:food_price,category:category_name})
+        }
+    })    
+    minCombinationPrice = minBasePrice+minMainPrice
+    if (minBasePrice == 999999999 || minMainPrice == 999999999) {
+        minCombinationPrice = null
+        hasCombination = false
+    }
+    let response = {"vendor" : vendor[0], "availableList": availist, "soldOutList" : soldoutlist, "hasCombination" : hasCombination, "minCombinationPrice" : minCombinationPrice}
+    return response
+}
+
+async function getInProgressV2(customerId) {
+    let inproglist = await db.query("SELECT Orders.vendor_id as vendorId, Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Food.food_image AS foodImage, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
+                    "FROM Orders, Contains, Food, Vendors "+
+                    "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
+                    "ORDER BY Orders.order_id", [customerId])
+    let res = []
+    let waittime = await db.query("select order_prepare_duration, order_id, vendor_id from Orders where order_status = 'COOKING' and vendor_id in (select vendor_id from Orders where order_id in (?) order by order_id asc)", [inproglist.map(x => x.orderId)])
+    console.log(waittime)
+    vendorOfOrders = _.groupBy(waittime, "vendor_id")
+    for (let i in vendorOfOrders) {
+        let ac = 0
+        for (let j in vendorOfOrders[i]) {
+            vendorOfOrders[i][j].order_prepare_duration += ac
+            ac = vendorOfOrders[i][j].order_prepare_duration
+        }
+    }
+    orderProcessed = _.flatten(Object.values(vendorOfOrders))
+    console.log(orderProcessed)
+    orderInverseIndex = _.object(orderProcessed.map(i => i.order_id), orderProcessed)
+    console.log(orderInverseIndex)
+    for (let i = 0; i<inproglist.length; i++) {
+        if (inproglist[i].orderStatus == "COOKING") {
+            let estTime = orderInverseIndex[inproglist[i].orderId].order_prepare_duration
+            res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(estTime/60)})
+
+        }else res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": null})
+    }
+    
+    return res             
+}
+  
+async function getHistoryV2(customerId) {
+    let histres = await db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at, r.created_at as reviewed_at from Orders o join Reviews r join Vendors v on o.order_id = r.order_id and v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') order by o.order_id", [customerId])
+    let reviewres = await db.query("select o.order_id, o.order_name, o.order_name_extra, o.order_price, v.restaurant_name, o.order_status, o.created_at from Orders o join Vendors v on v.vendor_id = o.vendor_id where o.customer_id = ? and (o.order_status = 'TIMEOUT' or o.order_status = 'CANCELLED' or o.order_status = 'COLLECTED') and o.order_id not in (select order_id from Reviews) order by o.order_id", [customerId])
+    let finalres = []
+    reviewres.forEach(res => {
+        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : false})
+    })
+    histres.forEach(res => {
+        finalres.push({"orderId" : res.order_id, "orderName" : res.order_name, "orderNameExtra" : res.order_name_extra, "orderPrice" : res.orde_price, "restaurantName" : res.restaurant_name, "orderStatus" : res.order_status, "createdAt" : res.created_at, "hasRated" : true})
+    })
+    finalres.sort((a, b) => {
+        return b.orderId - a.orderId
+    })
+    return finalres
+}
+
+async function getSlotIdV2(oid) {
+    let res = await db.query("select was_at_slot_id from Orders where order_id = ?", [oid])
+    return res
+}
+async function getListV2(vid) {
+    let list = await db.query("select f.food_id as foodId, f.food_name as foodName, f.food_price as price, f.food_image as foodImage, f.food_status as foodStatus, f.food_type as foodType, f.prepare_duration as prepareDuration, c.category_name as category from Food f left join Classifies c on f.food_id = c.food_id where vendor_id = ?", [vid])
+    let combilist = []
+    let alalist = []
+    list.forEach(food => {
+        if (food.foodType == "ALACARTE") {
+            alalist.push(food)
+        }else {
+            combilist.push(food)
+        }
+    })
+    return {combinationList: combilist, alacarteList: alalist}
 }
 
 async function getCancelReason(order_id) {
@@ -179,5 +290,10 @@ module.exports = {
   postNewOrder,
   getSaleRecords,
   getPaymentMethod,
+  getVendorMenuV2,
+  getInProgressV2,
+  getHistoryV2,
+  getSlotIdV2,
+  getListV2,
   getCancelReason
 }
