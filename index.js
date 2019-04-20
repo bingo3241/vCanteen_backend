@@ -18,8 +18,6 @@ const paymentModel = require('./models/payment')
 
 const db = require('./db/db')
 const firebase = require('./db/firebase')
-const adminModel = require('./models/admin')
-
 
 const passwordModule = require('./helpers/password');
 const mailgun = require('./helpers/email');
