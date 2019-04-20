@@ -274,8 +274,8 @@ async function getListV2(vid) {
 }
 
 async function getCancelReason(order_id) {
-    let response = await db.query("select cancel_reason as cancel_reason from Orders where order_id = ?", [order_id])
-    return response
+    let response = await db.query("select cancel_reason as cancelReason from Orders where order_id = ?", [order_id])
+    return response.cancelReason
 }
 
 module.exports = {
