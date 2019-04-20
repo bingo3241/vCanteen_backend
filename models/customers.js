@@ -128,7 +128,7 @@ async function getVendor() {
 
 async function reviewVendorV2(cid, oid, score, comment, createdAt) {
     try {
-        await db.query("insert into Reviews(customer_id, order_id, score, comment, createed_at) values (?, ?, ?, ?, ?)", [cid, oid, score, comment, createdAt])
+        await db.query("insert into Reviews(customer_id, order_id, score, comment, created_at) values (?, ?, ?, ?, ?)", [cid, oid, score, comment, createdAt])
         return null
     }catch (err){
         return err
