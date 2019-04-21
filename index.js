@@ -604,6 +604,7 @@ app.put('/v2/user-authentication/customer/verify/facebook', async (req,res) => {
   var account_type = await customersModel.getAccountType(email)
   if(account_type == 'FACEBOOK') {
     await customersModel.updateFirebaseToken(email, firebaseToken)
+    output.customerId = customersModel.getCustomerID(email)
     output.accountType = account_type
     output.customerSessionToken = jwt.sign(email)
     res.status(200).json(output)
@@ -693,6 +694,7 @@ app.put('/v2/user-authentication/vendor/verify/facebook', async (req,res) => {
   var account_type = await vendorsModel.getAccountType(email)
   if(account_type == 'FACEBOOK') {
     await vendorsModel.updateFirebaseToken(email, firebaseToken)
+    output.vendorId = await vendorsModel.getVendorID(email)
     output.accountType = account_type
     output.vendorSessionToken = jwt.sign(email)
     res.status(200).json(output)
