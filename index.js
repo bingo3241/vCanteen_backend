@@ -630,24 +630,46 @@ app.post('/v2/user-authentication/customer/signin', async (req,res) => {
 
 app.post('/v2/user-authentication/customer/new', async (req,res) => {
   let {email, password, firstname, lastname, customerImage, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
-  var customerCreated = await customersModel.insertNewCustomer(email, password, firstname, lastname, customerImage, accountType, firebaseToken)
-  if(customerCreated == false) {
-    return res.status(500).end()
-  }
-  var moneyAccountCreated = await moneyAccountsModel.createCustomer(serviceProvider, accountNumber)
-  if(moneyAccountCreated == false) {
-    return res.status(500).end()
-  }
-  var customer_id = await customersModel.getCustomerID(email)
-  var money_account_id = await moneyAccountsModel.getCustomerAccountID(accountNumber)
-  var linked = await paymentModel.linkCustomerPayment(customer_id, money_account_id)
-  if(linked) {
-    var output = new Object()
-    output.customerId = customer_id
-    output.customerSessionToken = jwt.sign(email)
-    res.status(200).json(output)
-  } else {
-    res.status(500).end()
+  if(accountType == 'NORMAL') {
+    var customerCreated = await customersModel.insertNewCustomer(email, password, firstname, lastname, customerImage, accountType, firebaseToken)
+    if(customerCreated == false) {
+      return res.status(500).end()
+    }
+    var moneyAccountCreated = await moneyAccountsModel.createCustomer(serviceProvider, accountNumber)
+    if(moneyAccountCreated == false) {
+      return res.status(500).end()
+    }
+    var customer_id = await customersModel.getCustomerID(email)
+    var money_account_id = await moneyAccountsModel.getCustomerAccountID(accountNumber)
+    var linked = await paymentModel.linkCustomerPayment(customer_id, money_account_id)
+    if(linked) {
+      var output = new Object()
+      output.customerId = customer_id
+      output.customerSessionToken = jwt.sign(email)
+      res.status(200).json(output)
+    } else {
+      res.status(500).end()
+    }
+  } else if(accountType == 'FACEBOOK') {
+    var customerCreated = await customersModel.insertNewCustomer(email, 'firebaseOnlyNaja', firstname, lastname, customerImage, accountType, firebaseToken)
+    if(customerCreated == false) {
+      return res.status(500).end()
+    }
+    var moneyAccountCreated = await moneyAccountsModel.createCustomer(serviceProvider, accountNumber)
+    if(moneyAccountCreated == false) {
+      return res.status(500).end()
+    }
+    var customer_id = await customersModel.getCustomerID(email)
+    var money_account_id = await moneyAccountsModel.getCustomerAccountID(accountNumber)
+    var linked = await paymentModel.linkCustomerPayment(customer_id, money_account_id)
+    if(linked) {
+      var output = new Object()
+      output.customerId = customer_id
+      output.customerSessionToken = jwt.sign(email)
+      res.status(200).json(output)
+    } else {
+      res.status(500).end()
+    }
   }
 })
 
