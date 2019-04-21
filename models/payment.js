@@ -25,7 +25,7 @@ async function unlinkCustomerPayment(customer_id, money_account_id) {
 }
 
 async function linkVendorPayment(vendor_id, money_account_id) {
-    console.log('Unlinking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
+    console.log('Linking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
     try {
         await db.query("INSERT INTO Vendor_Links(vendor_id, money_account_id) VALUES(?,?)", [vendor_id, money_account_id])
         console.log('Linking Vendor Payment Successed')
