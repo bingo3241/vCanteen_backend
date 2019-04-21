@@ -902,9 +902,8 @@ app.post("/v2/orders/customer/rating", async (req, res) => {
   let now = new Date()
   let thistime = now.getTime()+7*60*60*1000
   let currentDate = new Date(thistime)
-  let err = customersModel.reviewVendorV2(customerId, orderId, score, comment, currentDate)
-  console.log("err: "+err)
-  if (err != null) {
+  let err = await customersModel.reviewVendorV2(customerId, orderId, score, comment, currentDate)
+  if (err) {
     res.status(400).send()
   }else res.status(200).send()
 })
