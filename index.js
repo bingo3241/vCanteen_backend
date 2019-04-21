@@ -470,7 +470,7 @@ app.post("/v1/orders/new", async (req, res) => {
   let thistime = now.getTime()+7*60*60*1000
   now = new Date(thistime)
   let err = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
-  if (err) res.status(400).send()
+  if (err) res.json(err).status(400)
   else res.status(200).send()
 
 })
@@ -604,6 +604,7 @@ app.put('/v2/user-authentication/customer/verify/facebook', async (req,res) => {
   var account_type = await customersModel.getAccountType(email)
   if(account_type == 'FACEBOOK') {
     await customersModel.updateFirebaseToken(email, firebaseToken)
+    output.customerId = customersModel.getCustomerID(email)
     output.accountType = account_type
     output.customerSessionToken = jwt.sign(email)
     res.status(200).json(output)
@@ -693,6 +694,7 @@ app.put('/v2/user-authentication/vendor/verify/facebook', async (req,res) => {
   var account_type = await vendorsModel.getAccountType(email)
   if(account_type == 'FACEBOOK') {
     await vendorsModel.updateFirebaseToken(email, firebaseToken)
+    output.vendorId = await vendorsModel.getVendorID(email)
     output.accountType = account_type
     output.vendorSessionToken = jwt.sign(email)
     res.status(200).json(output)
