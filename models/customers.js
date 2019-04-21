@@ -117,7 +117,7 @@ async function getDensity() {
 }
 
 async function getRecommend() {
-    let x = await db.query("SELECT DISTINCT vendor_id as vendorId, food_image as foodImage, food_name as foodName FROM Food WHERE food_type = 'ALACARTE' ")
+    let x = await db.query("SELECT v.vendor_id as vendorId, food_image as foodImage, food_name as foodName FROM Vendors v join Food f where v.vendor_id = f.vendor_id and f.food_type = 'alacarte' and v.vendor_status = 'open' ")
     let y = Math.floor(Math.random() * x.length )
     console.log(y)
     return x[y]
