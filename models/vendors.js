@@ -384,9 +384,9 @@ async function editProfileImgV2(vid, img) {
 async function preinsertExtra(vendor_id) {
     try{
         await db.query("INSERT INTO Food(food_name, food_price, food_type, vendor_id, prepare_duration) "+
-        "VALUES ('Extra rice', 10, 'EXTRA', ?, 0), "+
-        "('No vegetable', 0, 'EXTRA', ?, 0), "+
-        "('Not spicy', 10, 'EXTRA', ?, 0)", [vendor_id, vendor_id, vendor_id])
+        "VALUES ('Extra Size', 10, 'EXTRA', ?, 0), "+
+        "('No Vegetable', 0, 'EXTRA', ?, 0), "+
+        "('Not Spicy', 10, 'EXTRA', ?, 0)", [vendor_id, vendor_id, vendor_id])
         console.log('Food Extra Created for VendorID: '+vendor_id)
         return true
     } 

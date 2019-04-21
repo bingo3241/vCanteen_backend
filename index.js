@@ -733,7 +733,7 @@ app.post('/v2/user-authentication/vendor/new', async (req,res) => {
       return res.status(500).end()
     }
     var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
-    var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
+    var linked = await paymentModel.linkVendorPayment(vendor_id, money_account_id)
     if(linked) {
       var output = new Object()
       output.vendorId = vendor_id
@@ -757,7 +757,7 @@ app.post('/v2/user-authentication/vendor/new', async (req,res) => {
       return res.status(500).end()
     }
     var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
-    var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
+    var linked = await paymentModel.linkVendorPayment(vendor_id, money_account_id)
     if(linked) {
       var output = new Object()
       output.vendorId = vendor_id
