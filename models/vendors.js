@@ -365,9 +365,9 @@ async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptim
     try {
         let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
         await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
-        return res
+        return [res, null]
     } catch (err) {
-        return err
+        return [null, err]
     }
 }
 
