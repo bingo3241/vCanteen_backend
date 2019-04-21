@@ -686,39 +686,64 @@ app.post('/v2/user-authentication/vendor/signin', async (req,res) => {
   var authed = await vendorsModel.NormalAuth(email, password)
   if(authed) {
     await vendorsModel.updateFirebaseToken(email, firebaseToken)
-    output.status = 'success'
     output.vendorId = await vendorsModel.getVendorID(email)
     output.vendorSessionToken = jwt.sign(email)
     res.status(200).json(output)
   } else {
-    res.status(404).json({status: 'error'})
+    res.status(409).json({status: 'error'})
   }
 })
 
 app.post('/v2/user-authentication/vendor/new', async (req,res) => {
-  let {email, password, vendorName, vendorImage, phoneNumber, fourDigitPin, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
-  var vendorCreated = await vendorsModel.insertNewVendor(email, password, accountType, vendorName, vendorImage, phoneNumber, fourDigitPin, firebaseToken)
-  if(vendorCreated == false) {
-    return res.status(500).end()
-  }
-  var vendor_id = await vendorsModel.getVendorID(email)
-  var extraInserted = await vendorsModel.preinsertExtra(vendor_id)
-  if(extraInserted == false) {
-    return res.status(500).end()
-  }
-  var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
-  if(moneyAccountCreated == false) {
-    return res.status(500).end()
-  }
-  var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
-  var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
-  if(linked) {
-    var output = new Object()
-    output.vendorId = vendor_id
-    output.vendorSessionToken = jwt.sign(email)
-    res.status(200).json(output)
-  } else {
-    res.status(500).end()
+  let {email, password, vendorName, phoneNumber, fourDigitPin, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
+  if(accountType == 'NORMAL') {
+    var vendorCreated = await vendorsModel.insertNewVendor(email, password, accountType, vendorName, phoneNumber, fourDigitPin, firebaseToken)
+    if(vendorCreated == false) {
+      return res.status(500).end()
+    }
+    var vendor_id = await vendorsModel.getVendorID(email)
+    var extraInserted = await vendorsModel.preinsertExtra(vendor_id)
+    if(extraInserted == false) {
+      return res.status(500).end()
+    }
+    var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
+    if(moneyAccountCreated == false) {
+      return res.status(500).end()
+    }
+    var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
+    var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
+    if(linked) {
+      var output = new Object()
+      output.vendorId = vendor_id
+      output.vendorSessionToken = jwt.sign(email)
+      res.status(200).json(output)
+    } else {
+      res.status(500).end()
+    }
+  } else if(accountType == 'FACEBOOK') {
+    var vendorCreated = await vendorsModel.insertNewVendor(email, 'firebaseOnlyNaja', accountType, vendorName, phoneNumber, fourDigitPin, firebaseToken)
+    if(vendorCreated == false) {
+      return res.status(500).end()
+    }
+    var vendor_id = await vendorsModel.getVendorID(email)
+    var extraInserted = await vendorsModel.preinsertExtra(vendor_id)
+    if(extraInserted == false) {
+      return res.status(500).end()
+    }
+    var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
+    if(moneyAccountCreated == false) {
+      return res.status(500).end()
+    }
+    var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
+    var linked = await paymentModel.linkVendorPayment(customer_id, money_account_id)
+    if(linked) {
+      var output = new Object()
+      output.vendorId = vendor_id
+      output.vendorSessionToken = jwt.sign(email)
+      res.status(200).json(output)
+    } else {
+      res.status(500).end()
+    }
   }
 })
 

@@ -231,9 +231,10 @@ async function insertFacebook(email) {
     }
 }
 
-async function insertNewVendor(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) {
+async function insertNewVendor(email, password, account_type, restaurant_name, phone_number, four_digit_pin, firebase_token) {
+    console.log(account_type)
     try{
-        await db.query("INSERT INTO Vendors(email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token) VALUES (?,?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, firebase_token])
+        await db.query("INSERT INTO Vendors(email, password, account_type, restaurant_name, phone_number, four_digit_pin, firebase_token) VALUES (?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, phone_number, four_digit_pin, firebase_token])
         console.log('New Vendor Created: '+email)
         return true
     } 
