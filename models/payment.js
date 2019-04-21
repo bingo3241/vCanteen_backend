@@ -25,8 +25,13 @@ async function unlinkCustomerPayment(customer_id, money_account_id) {
 }
 
 async function linkVendorPayment(vendor_id, money_account_id) {
-    console.log('Linking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
     try {
+        let linked = await isVendorAlreadyLinked(vendor_id)
+        if(linked != false) {
+            console.log('This vendor is already linked with money_account_id: '+linked.money_account_id)
+            await unlinkVendorPayment(vendor_id, linked.money_account_id)
+        }
+        console.log('Linking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
         await db.query("INSERT INTO Vendor_Links(vendor_id, money_account_id) VALUES(?,?)", [vendor_id, money_account_id])
         console.log('Linking Vendor Payment Successed')
         return true
@@ -62,11 +67,23 @@ async function getVendorPaymentMethod(vendor_id) {
     }
 }
 
+async function isVendorAlreadyLinked(vendor_id) {
+        let result = await db.query("SELECT money_account_id FROM Vendor_Links WHERE vendor_id = ?",[vendor_id])
+        var count = result.length
+        if(count = 0) {
+            return false
+        } else {
+            return result[0]
+        }
+}
+
+
 module.exports = {
     linkCustomerPayment,
     unlinkCustomerPayment,
     linkVendorPayment,
     unlinkVendorPayment,
-    getVendorPaymentMethod
+    getVendorPaymentMethod,
+    isVendorAlreadyLinked
 
 }
