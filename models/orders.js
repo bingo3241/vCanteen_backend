@@ -227,11 +227,15 @@ async function getInProgressV2(customerId) {
     orderProcessed = _.flatten(Object.values(vendorOfOrders))
     orderInverseIndex = _.object(orderProcessed.map(i => i.order_id), orderProcessed)
     for (let i = 0; i<inproglist.length; i++) {
+        if (inproglist[i].orderStatus == "DONE") {
+            res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": null})
+        }
+    }
+    for (let i = 0; i<inproglist.length; i++) {
         if (inproglist[i].orderStatus == "COOKING") {
             let estTime = orderInverseIndex[inproglist[i].orderId].order_prepare_duration
             res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": Math.ceil(estTime/60)})
-
-        }else res.push({"orderId": inproglist[i].orderId, "orderName": inproglist[i].orderName, "orderNameExtra": inproglist[i].orderNameExtra, "orderPrice": inproglist[i].orderPrice, "restaurantName": inproglist[i].restaurantName, "orderStatus": inproglist[i].orderStatus, "createdAt" : inproglist[i].createdAt, "orderEstimatedTime": null})
+        }
     }
     
     return res             
@@ -250,6 +254,7 @@ async function getHistoryV2(customerId) {
     finalres.sort((a, b) => {
         return b.orderId - a.orderId
     })
+
     return finalres
 }
 

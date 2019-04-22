@@ -686,7 +686,7 @@ app.put('/v2/user-authentication/vendor/verify/email', async (req,res) => {
 
 app.put('/v2/user-authentication/vendor/verify/facebook', async (req,res) => {
   var output = new Object()
-  let {email} = req.body
+  let {email, firebaseToken} = req.body
   var isInDatabase = await vendorsModel.isInDatabase(email)
   if(isInDatabase == false) {
     return res.status(404).send('Email not found')
