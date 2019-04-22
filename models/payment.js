@@ -7,7 +7,7 @@ async function linkCustomerPayment(customer_id, money_account_id) {
         console.log('Linking Customer Payment Successed')
         return true
     } catch (err) {
-        console.log('Linking Customer Payment Failed')
+        console.log('Linking Customer Payment Failed: '+err)
         return false
     }
 }
@@ -19,7 +19,7 @@ async function unlinkCustomerPayment(customer_id, money_account_id) {
         console.log('Unlinking CustomerPayment Successed')
         return true
     } catch (err) {
-        console.log('Unlinking Customer Payment Failed')
+        console.log('Unlinking Customer Payment Failed: '+err)
         return false
     }
 }
@@ -36,7 +36,7 @@ async function linkVendorPayment(vendor_id, money_account_id) {
         console.log('Linking Vendor Payment Successed')
         return true
     } catch (err) {
-        console.log('Linking Vendor Payment failed')
+        console.log('Linking Vendor Payment failed: '+err)
         return false
     }
 }
@@ -48,7 +48,7 @@ async function unlinkVendorPayment(vendor_id, money_account_id) {
         console.log('Unlinking Vendor Payment Successed')
         return true
     } catch (err) {
-        console.log('Unlinking Vendor Payment Failed')
+        console.log('Unlinking Vendor Payment Failed: '+err)
         return false
     }
 }
@@ -62,7 +62,7 @@ async function getVendorPaymentMethod(vendor_id) {
         console.log(result)
         return result
     } catch (err) {
-        console.log('Get Payment Method Failed')
+        console.log('Get Payment Method Failed: '+err)
         return false
     }
 }
@@ -85,5 +85,4 @@ module.exports = {
     unlinkVendorPayment,
     getVendorPaymentMethod,
     isVendorAlreadyLinked
-
 }
