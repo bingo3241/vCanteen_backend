@@ -234,7 +234,7 @@ async function insertFacebook(email) {
 async function insertNewVendor(email, password, account_type, restaurant_name, phone_number, four_digit_pin, firebase_token) {
     console.log(account_type)
     try{
-        await db.query("INSERT INTO Vendors(email, passwd, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, token_firebase, admin_permission) VALUES (?,?,?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, null, phone_number, four_digit_pin, firebase_token, "PENDING"])
+        await db.query("INSERT INTO Vendors(email, passwd, account_type, restaurant_name, vendor_image, phone_number, four_digit_pin, token_firebase, admin_permission,vendor_status, score) VALUES (?,?,?,?,?,?,?,?,?,?,?) ", [email, password, account_type, restaurant_name, null, phone_number, four_digit_pin, firebase_token, "PENDING", "CLOSED",0.0])
         console.log('New Vendor Created: '+email)
         return true
     } 
