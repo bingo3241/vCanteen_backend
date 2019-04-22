@@ -470,7 +470,7 @@ app.post("/v1/orders/new", async (req, res) => {
   let thistime = now.getTime()+7*60*60*1000
   now = new Date(thistime)
   let err = await ordersModel.postNewOrder(orderList, customerId, vendorId, now, customerMoneyAccountId, totalPrice)
-  if (err) res.json(err).status(400)
+  if (err) res.status(400).json(err)
   else res.status(200).send()
 
 })
