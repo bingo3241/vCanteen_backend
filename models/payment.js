@@ -28,8 +28,8 @@ async function linkVendorPayment(vendor_id, money_account_id) {
     try {
         let linked = await isVendorAlreadyLinked(vendor_id)
         if(linked != false) {
-            console.log('This vendor is already linked with money_account_id: '+linked.money_account_id)
-            await unlinkVendorPayment(vendor_id, linked.money_account_id)
+            console.log('This vendor is already linked with money_account_id: '+linked)
+            await unlinkVendorPayment(vendor_id, linked)
         }
         console.log('Linking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
         await db.query("INSERT INTO Vendor_Links(vendor_id, money_account_id) VALUES(?,?)", [vendor_id, money_account_id])
@@ -70,11 +70,12 @@ async function getVendorPaymentMethod(vendor_id) {
 async function isVendorAlreadyLinked(vendor_id) {
         let result = await db.query("SELECT money_account_id FROM Vendor_Links WHERE vendor_id = ?",[vendor_id])
         var count = result.length
-        if(count = 0) {
+        if(count == 0) {
             return false
         } else {
-            return result[0]
+            return result[0].money_account_id
         }
+        
 }
 
 
