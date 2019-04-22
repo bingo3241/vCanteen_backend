@@ -239,7 +239,7 @@ async function insertNewVendor(email, password, account_type, restaurant_name, p
         return true
     } 
     catch(err) {
-        console.log('Creating New Vendor Failed')
+        console.log(err)
         return false
     }
 }
