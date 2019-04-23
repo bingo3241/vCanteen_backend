@@ -686,7 +686,7 @@ app.put('/v2/user-authentication/vendor/verify/email', async (req,res) => {
 
 app.put('/v2/user-authentication/vendor/verify/facebook', async (req,res) => {
   var output = new Object()
-  let {email} = req.body
+  let {email, firebaseToken} = req.body
   var isInDatabase = await vendorsModel.isInDatabase(email)
   if(isInDatabase == false) {
     return res.status(404).send('Email not found')
@@ -723,26 +723,26 @@ app.post('/v2/user-authentication/vendor/new', async (req,res) => {
   if(accountType == 'NORMAL') {
     var vendorCreated = await vendorsModel.insertNewVendor(email, password, accountType, vendorName, phoneNumber, fourDigitPin, firebaseToken)
     if(vendorCreated == false) {
-      return res.status(500).end()
+      return res.status(500).send('Creating Vendor Error')
     }
     var vendor_id = await vendorsModel.getVendorID(email)
+    console.log('vendor_id: '+vendor_id)
     var extraInserted = await vendorsModel.preinsertExtra(vendor_id)
     if(extraInserted == false) {
-      return res.status(500).end()
+      return res.status(500).send('Insert Food Extra Error')
     }
     var moneyAccountCreated = await moneyAccountsModel.createVendor(serviceProvider, accountNumber)
     if(moneyAccountCreated == false) {
-      return res.status(500).end()
+      return res.status(500).send('Creating Vendor Money Account Error')
     }
     var money_account_id = await moneyAccountsModel.getVendorAccountID(accountNumber)
-    var linked = await paymentModel.linkVendorPayment(vendor_id, money_account_id)
-    if(linked) {
+    if(await paymentModel.linkVendorPayment(vendor_id, money_account_id)) {
       var output = new Object()
       output.vendorId = vendor_id
       output.vendorSessionToken = jwt.sign(email)
       res.status(200).json(output)
     } else {
-      res.status(500).end()
+      res.status(500).send('Linking Error')
     }
   } else if(accountType == 'FACEBOOK') {
     var vendorCreated = await vendorsModel.insertNewVendor(email, 'firebaseOnlyNaja', accountType, vendorName, phoneNumber, fourDigitPin, firebaseToken)

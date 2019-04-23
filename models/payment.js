@@ -7,7 +7,7 @@ async function linkCustomerPayment(customer_id, money_account_id) {
         console.log('Linking Customer Payment Successed')
         return true
     } catch (err) {
-        console.log('Linking Customer Payment Failed')
+        console.log('Linking Customer Payment Failed: '+err)
         return false
     }
 }
@@ -19,7 +19,7 @@ async function unlinkCustomerPayment(customer_id, money_account_id) {
         console.log('Unlinking CustomerPayment Successed')
         return true
     } catch (err) {
-        console.log('Unlinking Customer Payment Failed')
+        console.log('Unlinking Customer Payment Failed: '+err)
         return false
     }
 }
@@ -28,15 +28,15 @@ async function linkVendorPayment(vendor_id, money_account_id) {
     try {
         let linked = await isVendorAlreadyLinked(vendor_id)
         if(linked != false) {
-            console.log('This vendor is already linked with money_account_id: '+linked.money_account_id)
-            await unlinkVendorPayment(vendor_id, linked.money_account_id)
+            console.log('This vendor is already linked with money_account_id: '+linked)
+            await unlinkVendorPayment(vendor_id, linked)
         }
         console.log('Linking vendor_id = '+vendor_id+' and money_account_id = '+money_account_id+'...')
         await db.query("INSERT INTO Vendor_Links(vendor_id, money_account_id) VALUES(?,?)", [vendor_id, money_account_id])
         console.log('Linking Vendor Payment Successed')
         return true
     } catch (err) {
-        console.log('Linking Vendor Payment failed')
+        console.log('Linking Vendor Payment failed: '+err)
         return false
     }
 }
@@ -48,7 +48,7 @@ async function unlinkVendorPayment(vendor_id, money_account_id) {
         console.log('Unlinking Vendor Payment Successed')
         return true
     } catch (err) {
-        console.log('Unlinking Vendor Payment Failed')
+        console.log('Unlinking Vendor Payment Failed: '+err)
         return false
     }
 }
@@ -62,7 +62,7 @@ async function getVendorPaymentMethod(vendor_id) {
         console.log(result)
         return result
     } catch (err) {
-        console.log('Get Payment Method Failed')
+        console.log('Get Payment Method Failed: '+err)
         return false
     }
 }
@@ -70,11 +70,12 @@ async function getVendorPaymentMethod(vendor_id) {
 async function isVendorAlreadyLinked(vendor_id) {
         let result = await db.query("SELECT money_account_id FROM Vendor_Links WHERE vendor_id = ?",[vendor_id])
         var count = result.length
-        if(count = 0) {
+        if(count == 0) {
             return false
         } else {
-            return result[0]
+            return result[0].money_account_id
         }
+        
 }
 
 
@@ -85,5 +86,4 @@ module.exports = {
     unlinkVendorPayment,
     getVendorPaymentMethod,
     isVendorAlreadyLinked
-
 }

@@ -53,7 +53,7 @@ async function getVendorAccountID(account_number) {
         console.log('Vendor Account Money ID: '+id)
         return id
     } catch (err) {
-        console.log("Get Vendor Money Account ID Failed")
+        console.log("Get Vendor Money Account ID Failed: "+err)
         return null
     }
 }
