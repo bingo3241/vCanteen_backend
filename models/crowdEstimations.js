@@ -31,9 +31,22 @@ async function getHourlyStat(day) {
     return result
 }
 
+async function  insertRecord(created_at, percent_density) {
+    try{
+        await db.query("INSERT INTO CrowdEstimations(created_at, percent_density) VALUES(?,?)", [created_at, percent_density])
+        return true
+
+    } catch(err) {
+        console.log('Insert Record Error: '+err)
+        return false
+        
+    } 
+}
+
 
 module.exports = {
     getLatestRecord,
     getDayOfLatestRecord,
     getHourlyStat,
+    insertRecord,
 }

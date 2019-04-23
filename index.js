@@ -1098,6 +1098,16 @@ app.get('/v2/crowd-estimation/:day', async (req,res) => {
   return res.status(200).json(await crowdEstimationModel.getHourlyStat(req.params.day))
 })
 
+app.post('/v2/crowd-estimation/prediction', async (req,res) => {
+  let {created_at, percent_density} = req.body
+  var inserted = await crowdEstimationModel.insertRecord(created_at, percent_density)
+  if(inserted) {
+    res.status(200).end()
+  } else {
+    res.status(500).end()
+  }
+})
+
 
 let port = process.env.PORT;
 if (port == null || port == "") {
