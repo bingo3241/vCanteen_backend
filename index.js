@@ -1002,8 +1002,10 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
-    let y = await db.query('SELECT vendor_queuing_time FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
+    let y = await db.query('SELECT CEILING(vendor_queuing_time/60) FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
     let z = await db.query('SELECT CEILING(order_prepare_duration/60) FROM Orders WHERE order_id = ?',[order_id])
+    console.log(y)
+    console.log(z)
     await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [y-z,order_id])
     console.log(order_id)
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
@@ -1031,8 +1033,10 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
 
   if(order_status == "CANCELLED"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
-    let y = await db.query('SELECT vendor_queuing_time FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
-    let z = await db.query('SELECT order_prepare_duration FROM Orders WHERE order_id = ?',[order_id])
+    let y = await db.query('SELECT CEILING(vendor_queuing_time/60) FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
+    let z = await db.query('SELECT CEILING(order_prepare_duration/60) FROM Orders WHERE order_id = ?',[order_id])
+    console.log(y)
+    console.log(z)
     await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [y-z,order_id])
     console.log(order_id)
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
