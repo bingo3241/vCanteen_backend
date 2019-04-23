@@ -320,6 +320,9 @@ async function getReviewV2(vid) {
     let resultlist = []
     //console.log(score)
     //console.log(reviewlist)
+    reviewlist.sort((a,b) => {
+        return a.created_at - b.created_at
+    })
     reviewlist.forEach(review => {
         const date = new Date(review.created_at);
         const month = date.toLocaleString('en-us', { month: 'long' });
