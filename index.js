@@ -1002,8 +1002,8 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
-    let y = await db.query('SELECT CEILING(vendor_queuing_time/60) as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
-    let z = await db.query('SELECT CEILING(order_prepare_duration/60) as o FROM Orders WHERE order_id = ?',[order_id])
+    let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
+    let z = await db.query('SELECT order_prepare_duration as o FROM Orders WHERE order_id = ?',[order_id])
     let a = y[0].v
     let b = z[0].o
     console.log(a-b)
