@@ -152,6 +152,7 @@ async function postNewOrder(orderList, customerId, vendorId, createdAt, customer
         }
         let orderResult = await db.query("insert into Orders(order_name, order_name_extra, order_status, order_price, customer_id, created_at, vendor_id, transaction_id, order_prepare_duration) values (?, ?, 'COOKING', ?, ?, ?, ?, ?, ?)", [orderName, orderNameExtra, orderPrice, customerId, createdAt, vendorId, transacResult.insertId, esttime])
         let returnres = {"orderId" : orderResult.insertId, "orderName" : orderName, "orderNameExtra" : orderNameExtra, "orderStatus" : "COOKING"}
+        await db.query("update Vendors set vendor_queuing_time = (vendor_queuing_time + ?) where vendor_id = ?", [esttime, vendorId])
         console.log(returnres)
         fids.forEach(fid => {
             db.query("insert into Contains(order_id, food_id) values (?, ?)", [orderResult.insertId, fid])
