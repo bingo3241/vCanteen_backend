@@ -125,17 +125,15 @@ async function getRecommend() {
 }
 
 async function getVendor() {
-    let open = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus FROM Vendors  WHERE admin_permission = 'APPROVED' AND vendor_status = 'OPEN' ORDER BY vendor_id ASC")
-    let close = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus FROM Vendors WHERE admin_permission = 'APPROVED' AND vendor_status = 'CLOSED' ORDER BY vendor_id ASC")
-    let x = []   
-    for (let i = 0; i<open.length; i++) {  
-            let waittime = await db.query("select sum(order_prepare_duration) as time from Orders where vendor_id = (select distinct vendor_id from Orders where vendor_id = ?) AND order_status = 'COOKING'", [open[i].vendorId])
-            x.push({"vendorId": open[i].vendorId, "restaurantName": open[i].restaurantName, "vendorImage": open[i].vendorImage, "vendorStatus": open[i].vendorStatus ,"queuingTime": Math.ceil(waittime[0].time/60)})
-    } 
-    for (let i = 0; i<close.length; i++) {  
-        let waittime = 0
-        x.push({"vendorId": close[i].vendorId, "restaurantName": close[i].restaurantName, "vendorImage": close[i].vendorImage, "vendorStatus": close[i].vendorStatus, "queuingTime": waittime})
-    }
+    let open = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus, CEILING(vendor_queuing_time/60) as queuingTime  FROM Vendors  WHERE admin_permission = 'APPROVED' AND vendor_status = 'OPEN' ORDER BY vendor_id ASC")
+    let close = await db.query("SELECT vendor_id as vendorId,restaurant_name as restaurantName, vendor_image as vendorImage, vendor_status as vendorStatus, vendor_queuing_time as queuingTime FROM Vendors WHERE admin_permission = 'APPROVED' AND vendor_status = 'CLOSED' ORDER BY vendor_id ASC")
+    let x = []
+    open.forEach(data => {
+        x.push(data)
+    })   
+    close.forEach(data => {
+        x.push(data)
+    }) 
     return x             
 }
 
