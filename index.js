@@ -1006,6 +1006,7 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
     let z = await db.query('SELECT CEILING(order_prepare_duration/60) FROM Orders WHERE order_id = ?',[order_id])
     console.log(y)
     console.log(z)
+    console.log(y-z)
     console.log(order_id)
     await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [y-z,order_id])
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
