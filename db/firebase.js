@@ -73,7 +73,7 @@ function sendToFirebase(title, body, token) {
           {
             "message": {
               "token": token,
-              "notification": {
+              "data": {
                 "body": body,
                 "title": title,
               }
