@@ -630,9 +630,9 @@ app.post('/v2/user-authentication/customer/signin', async (req,res) => {
 })
 
 app.post('/v2/user-authentication/customer/new', async (req,res) => {
-  let {email, password, firstname, lastname, customerImage, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
+  let {email, password, firstName, lastName, customerImage, accountType, serviceProvider, accountNumber, firebaseToken} = req.body
   if(accountType == 'NORMAL') {
-    var customerCreated = await customersModel.insertNewCustomer(email, password, firstname, lastname, customerImage, accountType, firebaseToken)
+    var customerCreated = await customersModel.insertNewCustomer(email, password, firstName, lastName, customerImage, accountType, firebaseToken)
     if(customerCreated == false) {
       return res.status(500).end()
     }
@@ -652,7 +652,7 @@ app.post('/v2/user-authentication/customer/new', async (req,res) => {
       res.status(500).end()
     }
   } else if(accountType == 'FACEBOOK') {
-    var customerCreated = await customersModel.insertNewCustomer(email, 'firebaseOnlyNaja', firstname, lastname, customerImage, accountType, firebaseToken)
+    var customerCreated = await customersModel.insertNewCustomer(email, 'firebaseOnlyNaja', firstName, lastName, customerImage, accountType, firebaseToken)
     if(customerCreated == false) {
       return res.status(500).end()
     }
