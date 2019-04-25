@@ -366,9 +366,14 @@ async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname
 }
 
 async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    let res
     try {
-        let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
-        await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
+        if (ftype == "COMBINATION_BASE" || ftype == "COMBINATION_MAIN") {
+            res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+        }else {
+            res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+            await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
+        }
         return [res, null]
     } catch (err) {
         return [null, err]
@@ -389,7 +394,7 @@ async function preinsertExtra(vendor_id) {
         await db.query("INSERT INTO Food(food_name, food_price, food_type, vendor_id, prepare_duration) "+
         "VALUES ('Extra Size', 10, 'EXTRA', ?, 0), "+
         "('No Vegetable', 0, 'EXTRA', ?, 0), "+
-        "('Not Spicy', 10, 'EXTRA', ?, 0)", [vendor_id, vendor_id, vendor_id])
+        "('Not Spicy', 0, 'EXTRA', ?, 0)", [vendor_id, vendor_id, vendor_id])
         console.log('Food Extra Created for VendorID: '+vendor_id)
         return true
     } 
