@@ -8,7 +8,7 @@ async function getAdminID(email) {
 async function auth(email, password) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Admin WHERE email = ? AND passwd = ?', [email, password])
     if( temp[0].Count == 1 ){
-        console.log("Authentication: successed")
+        console.log("Authentication: success")
         return true;
     } else {
         console.log("Authentication: failed")

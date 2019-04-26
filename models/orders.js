@@ -209,8 +209,7 @@ async function getVendorMenuV2(vid) {
 
 async function getInProgressV2(customerId) {
     let inproglist = await db.query("SELECT Orders.vendor_id as vendorId, Orders.order_id AS orderId, Orders.order_name AS orderName, Orders.order_name_extra AS orderNameExtra, Orders.order_price AS orderPrice, Vendors.restaurant_name AS restaurantName, Orders.order_status AS orderStatus, Orders.order_prepare_duration, Vendors.vendor_queuing_time, DATE_FORMAT(Orders.created_at, '%d/%m/%Y %H:%i') AS createdAt "+
-                    "FROM Orders, Contains, Food, Vendors "+
-                    "WHERE Orders.order_id = Contains.order_id AND Food.food_id = Contains.food_id AND Orders.customer_id = ? AND Orders.vendor_id = Vendors.vendor_id AND (Orders.order_status = 'COOKING' OR Orders.order_status = 'DONE') AND (Food.food_type = 'ALACARTE' OR Food.food_type = 'COMBINATION_MAIN') "+
+                    "FROM Orders join Vendors on Orders.vendorId = Vendors.vendorId and Orders.customerId = ? where Orders.orderStatus = 'COOKING' OR Orders.orderStatus = 'DONE'"+
                     "ORDER BY Orders.order_id", [customerId])
     if (inproglist.length < 1 || inproglist == undefined) return inproglist
     let res = []

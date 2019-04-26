@@ -518,7 +518,7 @@ app.put('/v1/vendor-main/order/status' , async(req,res) => {
     setTimeout(async () => {
       let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
       let orderStatus = orderStatusA[0].order_status
-      if(orderStatus != "COLLECTED"){
+      if(orderStatus != "COLLECTED" ){
         await vendorsModel.updateCancelReason(order_id,"TIMEOUT",cancel_reason)
         x = firebase.sendToFirebase("Your order has expired.", "Tap here to view order.", token)
         await db.query("UPDATE Orders SET was_at_slot_id = (SELECT slot_id FROM Is_At WHERE order_id = ? ) WHERE order_id = ? ", [order_id,order_id])
@@ -1011,7 +1011,11 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
     await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [a-b,order_id])
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
     setTimeout(async () => {
-      x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
+      let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])
+      let orderStatus = orderStatusA[0].order_status
+      if(orderStatus != "COLLECTED"){
+        x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
+      }
     },30*1000)
     setTimeout(async () => {
       let orderStatusA = await db.query("select order_status from Orders where order_id = ?", [order_id])

@@ -38,7 +38,7 @@ async function isInDatabase(email) {
 async function NormalAuth(email, password) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Vendors WHERE email = ? AND passwd = ?', [email, password])
     if( temp[0].Count == 1 ){
-        console.log("Authentication: successed")
+        console.log("Authentication: success")
         return true;
     } else {
         console.log("Authentication: failed")
