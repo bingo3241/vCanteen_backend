@@ -554,6 +554,7 @@ app.put('/v1/settings/vendor/orders/cancel-all' , async(req,res) => {
   let cancel_reason = req.body.cancelReason
   console.log(vendor_id)
   let x = await vendorsModel.getToken(vendor_id)
+  db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = ?', [0,vendor_id])
   x.forEach(id => {
     firebase.sendToFirebase(cancel_reason, "Tap here to view order.", id.token_firebase)
   }) 
@@ -1001,7 +1002,13 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   if(order_status == "DONE"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
+    let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
+    let z = await db.query('SELECT order_prepare_duration as o FROM Orders WHERE order_id = ?',[order_id])
+    let a = y[0].v
+    let b = z[0].o
+    console.log(a-b)
     console.log(order_id)
+    await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [a-b,order_id])
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
     setTimeout(async () => {
       x = firebase.sendToFirebase("5 minutes left to pick up your order.", "Tap here to view order.", token)
@@ -1027,6 +1034,11 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
 
   if(order_status == "CANCELLED"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
+    let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
+    let z = await db.query('SELECT order_prepare_duration as o FROM Orders WHERE order_id = ?',[order_id])
+    let a = y[0].v
+    let b = z[0].o
+    await db.query('UPDATE Vendors SET vendor_queuing_time = ? WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [a-b,order_id])
     console.log(order_id)
     let [err, result] = await vendorsModel.updateCancelReason(order_id,order_status,cancel_reason)
     if(err) {
