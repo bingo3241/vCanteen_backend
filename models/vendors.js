@@ -357,7 +357,7 @@ async function editPinV2(vid, pin) {
 
 async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
     let current = await db.query("select f.food_type from Food f left join Classifies c on f.food_id = c.food_id and f.food_id = ?", [fid])
-    console.log(current[0])
+    console.log("current: "+current[0].food_type+"  new: "+ ftype)
     try{
         let res
         if (ftype == "ALACARTE" && (current[0].food_type == "COMBINATION_BASE" || current[0].food_type == "COMBINATION_MAIN")) {
