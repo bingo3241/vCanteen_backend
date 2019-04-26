@@ -356,7 +356,7 @@ async function editPinV2(vid, pin) {
 }
 
 async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
-    let current = await db.query("select f.food_type from Food f left join Classifies c on f.food_id = c.food_id and f.food_id = ?", [fid])
+    let current = await db.query("select food_type from Food  where food_id = ?", [fid])
     console.log("current: "+current[0].food_type+"  new: "+ ftype+"  foodID :"+ fid)
     try {
         res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime,   fid])
