@@ -357,22 +357,18 @@ async function editPinV2(vid, pin) {
 
 async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
     let current = await db.query("select f.food_type from Food f left join Classifies c on f.food_id = c.food_id and f.food_id = ?", [fid])
-    console.log("current: "+current[0].food_type+"  new: "+ ftype)
+    console.log("current: "+current[0].food_type+"  new: "+ ftype+"  foodID :"+ fid)
     try {
+        res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, fid])
         if (ftype == "ALACARTE") {
             if (current[0].food_type == "ALACARTE") {
-                res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
                 await db.query("update Classifies set category_name = ? where food_id = ?)", [catname, fid])
             }else {
-                res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
                 await db.query("insert into Classifies(category_name, food_id) values(?, ?))", [catname, fid])
             }
         }else {
             if (current[0].food_type == "ALACARTE") {
-                res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
                 await db.query("delete from Classifies where food_id = ?)", [fid])
-            }else {
-                res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
             }
         }
         return null
