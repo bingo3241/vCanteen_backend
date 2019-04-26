@@ -140,6 +140,8 @@ async function getVendor() {
 async function reviewVendorV2(cid, oid, score, comment, createdAt) {
     try {
         await db.query("insert into Reviews(customer_id, order_id, score, comment, created_at) values (?, ?, ?, ?, ?)", [cid, oid, score, comment, createdAt])
+        let vendor = await db.query("select vendor_id from Orders where order_id = ?", [oid])
+        await db.query("update Vendors set score = (select avg(r.score) from Orders o join Reviews r on o.order_id = r.order_id and o.vendor_id = ?) where vendor_id = ?", [vendor[0].vendor_id,vendor[0].vendor_id])
         return null
     }catch (err){
         return err
