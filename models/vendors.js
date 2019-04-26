@@ -38,7 +38,7 @@ async function isInDatabase(email) {
 async function NormalAuth(email, password) {
     var temp = await db.query('SELECT COUNT(email) AS Count FROM Vendors WHERE email = ? AND passwd = ?', [email, password])
     if( temp[0].Count == 1 ){
-        console.log("Authentication: successed")
+        console.log("Authentication: success")
         return true;
     } else {
         console.log("Authentication: failed")
@@ -356,19 +356,36 @@ async function editPinV2(vid, pin) {
 }
 
 async function editMenuV2(vid, fid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
-    try{
-    let res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where vendor_id = ? and food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime, vid, fid])
-    await db.query("update Classifies set category_name = ? where food_id = ?)", [catname, fid])
-    return null
-    } catch (err) {
+    let current = await db.query("select food_type from Food  where food_id = ?", [fid])
+    console.log("current: "+current[0].food_type+"  new: "+ ftype+"  foodID :"+ fid)
+    try {
+        res = await db.query("update Food set food_name = ?, food_price =?, food_status = ?, food_type = ?, food_image = ?, prepare_duration = ? where food_id = ?", [fname, fprice, fstatus, ftype, fimg, ptime,   fid])
+        if (ftype == "ALACARTE") {
+            if (current[0].food_type == "ALACARTE") {
+                await db.query("update Classifies set category_name = ? where food_id = ?", [catname, fid])
+            }else {
+                await db.query("insert into Classifies(category_name, food_id) values(?, ?)", [catname, fid])
+            }
+        }else {
+            if (current[0].food_type == "ALACARTE") {
+                await db.query("delete from Classifies where food_id = ?", [fid])
+            }
+        }
+        return null
+    }catch (err) {
         return err
-    }
+    } 
 }
 
 async function addMenuV2(vid, fname, fprice, fstatus, ftype, fimg, catname, ptime) {
+    let res
     try {
-        let res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
-        await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
+        if (ftype == "COMBINATION_BASE" || ftype == "COMBINATION_MAIN") {
+            res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+        }else {
+            res = await db.query("insert into Food(food_name, food_price, food_status, food_type, food_image, prepare_duration, vendor_id) values (?, ?, ?, ?, ?, ?, ?)", [fname, fprice, fstatus, ftype, fimg, ptime, vid])
+            await db.query("insert into Classifies (food_id, category_name) values (?, ?)", [res.insertId, catname])
+        }
         return [res, null]
     } catch (err) {
         return [null, err]

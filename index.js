@@ -959,8 +959,8 @@ app.put("/v2/menu-management/menu", async (req, res) => {
 })
  
 app.post("/v2/menu-management/menu", async (req, res) => {  
-  let {vendorId, foodName, price, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
-  let [result, err] = await vendorsModel.addMenuV2(vendorId, foodName, price, foodStatus, foodType, foodImage, categoryName, prepareDuration)
+  let {vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, prepareDuration, categoryName} = req.body
+  let [result, err] = await vendorsModel.addMenuV2(vendorId, foodName, foodPrice, foodStatus, foodType, foodImage, categoryName, prepareDuration)
   if (err) res.status(400).send()
   else res.json({foodId:result.insertId})
 })
