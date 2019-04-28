@@ -995,11 +995,12 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   let currentDate = new Date(thistime)
   let cidA = await db.query("select customer_id from Orders where order_id = ?", [order_id])
   let cid = cidA[0].customer_id
+  let status = await db.query('SELECT order_status FROM Orders WHERE order_id = ?', [order_id])
   console.log(cid)
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
   let token = tokenA[0].token_firebase
   console.log(token)
-  if(order_status == "DONE"){
+  if(order_status == "DONE" && status == "COOKING"){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
     let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
@@ -1036,7 +1037,7 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
       } 
   }
 
-  if(order_status == "CANCELLED"){
+  if(order_status == "CANCELLED" &&  status == "COOKING"){
     x = firebase.sendToFirebase("One of your orders has been cancelled.", "Tap here to view order.", token)
     let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
     let z = await db.query('SELECT order_prepare_duration as o FROM Orders WHERE order_id = ?',[order_id])
