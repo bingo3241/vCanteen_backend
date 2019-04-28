@@ -1001,7 +1001,7 @@ app.put('/v2/vendor-main/order/status' , async(req,res) => {
   let tokenA = await db.query("select token_firebase from Customers where customer_id = ?", [cid])
   let token = tokenA[0].token_firebase
   console.log(token)
-  if(order_status == "DONE" && status == "COOKING"){
+  if(order_status == "DONE" /*&& status == "COOKING"*/){
     firebase.sendToFirebase("One of your orders is ready for pick-up.", "Tap here to view order.", token)
     let x = await vendorsModel.assignSlot(order_id, currentDate)
     let y = await db.query('SELECT vendor_queuing_time as v FROM Vendors WHERE vendor_id = (SELECT vendor_id from Orders WHERE order_id = ?)', [order_id])
