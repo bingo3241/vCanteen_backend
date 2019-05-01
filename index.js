@@ -1128,7 +1128,10 @@ app.get('/v2/crowd-estimation/:day', async (req,res) => {
 })
 
 app.post('/v2/crowd-estimation/prediction', async (req,res) => {
-  let {created_at, percent_density} = req.body
+  let {percent_density} = req.body
+  let now = new Date()
+  let thistime = now.getTime()+7*60*60*1000
+  let created_at = new Date(thistime)
   var inserted = await crowdEstimationModel.insertRecord(created_at, percent_density)
   if(inserted) {
     res.status(200).end()
