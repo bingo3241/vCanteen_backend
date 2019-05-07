@@ -1,7 +1,7 @@
-# Project for ICE Capstone, Software Engineering, and Database Systems courses of Chulalongkorn University.
+# 3rd Year Project for ICE Capstone, Software Engineering, and Database Systems courses of Chulalongkorn University.
 
 ## vCanteen (Backend)
-Backend for vCanteen application which will be deployed to Heroku.
+Backend of vCanteen application which will be deployed to heroku.
 
 ### Group Members:
 1.  Boonsita 	Vatcharakomonphan	5931294521 (Project Manager)
