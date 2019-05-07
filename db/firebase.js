@@ -3,9 +3,6 @@ const functions = require('firebase-functions');
 var { google } = require('googleapis');
 var MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 var SCOPES = [MESSAGING_SCOPE];
-// var serviceAccount = require('../service_account.json')
-
-//var router = express.Router();
 var request = require('request');
 
 admin.initializeApp({
@@ -24,12 +21,6 @@ admin.initializeApp({
    }),
     databaseURL: process.env.FIREBASE_DATABASE_URL
 })
-
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   databaseURL: process.env.FIREBASE_DATABASE_URL
-// })
-
 
 async function getUID(email) {
     return await new Promise(async function(resolve, reject) {

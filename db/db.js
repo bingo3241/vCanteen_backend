@@ -1,53 +1,18 @@
-// var mysql = require('mysql2');
-
-// // //gcp db
-// var con = mysql.createConnection({
-//     host: "35.240.206.151",
-//     user: "root",
-//     password: "root",
-//     database: "test-db",
-// })
-
-// //local db
-// // var con = mysql.createConnection({
-// //     host: "localhost",
-// //     user: "root",
-// //     password: "root",
-// //     database: "testdb",
-// //     port: "8889"
-// // })
-
-// con.connect()
-
-// function query(sql, params = []) {
-//   return new Promise( (resolve, reject) => {
-//     con.query(sql, params, function(err, result, fields) {
-//         if (err) {
-//             reject(err)
-//         }
-//         resolve(result)
-//     })
-//   })
-// }
-
-
-//Fixie Socks (Only for HEROKU)
 'use strict';
 
 const SocksConnection = require('socksjs');
 const mysql = require('mysql2');
 const fixieUrl = process.env.FIXIE_SOCKS_HOST;
-// const fixieUrl = 'fixie:3Dlt60eCtxJ07Zw@speedway.usefixie.com:1080';
 const fixieValues = fixieUrl.split(new RegExp('[/(:\\/@)/]+'));
 
 const mysqlServer = {
-  host: '35.240.206.151',
-  port: 3306
+  host: process.env.GCP_HOST,
+  port: process.env.GCP_PORT
 };
 
-const dbUser = 'root';
-const dbPassword = 'root';
-const db = 'vcanteen-db-v2';
+const dbUser = process.env.GCP_USER;
+const dbPassword = process.env.GCP_PASSWORD;
+const db = process.env.GCP_DB;
 
 var pool = mysql.createPool({
   user: dbUser,
