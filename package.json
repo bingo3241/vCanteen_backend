@@ -24,7 +24,7 @@
         "moment-timezone": "^0.5.25",
         "mysql2": "^1.6.5",
         "request": "^2.88.0",
-        "socket.io": "^2.2.0",
+        "socket.io": "^2.4.0",
         "socksjs": "^0.5.0",
         "underscore": "^1.9.1"
     },
