@@ -19,7 +19,7 @@
         "firebase-admin": "^7.0.0",
         "firebase-functions": "^2.2.0",
         "googleapis": "^39.1.0",
-        "jsonwebtoken": "^8.5.1",
+        "jsonwebtoken": "^9.0.0",
         "mailgun-js": "^0.22.0",
         "moment-timezone": "^0.5.25",
         "mysql2": "^1.6.5",
